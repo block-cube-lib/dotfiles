@@ -1,0 +1,147 @@
+
+[[plugins]] # plugin manager
+repo = 'Shougo/dein.vim'
+
+###
+# Denite
+###
+
+[[plugins]]
+repo = 'Shougo/denite.nvim'
+hook_add = '''
+  nnoremap [Denite] <Nop>
+  nmap <Space>d [Denite]
+  nnoremap <silent> [Denite]b :<C-u>Denite buffer<CR>
+  nnoremap <silent> [Denite]d :<C-u>Denite directory_rec<CR>
+  nnoremap <silent> [Denite]f :<C-u>Denite file_rec<CR>
+  nnoremap <silent> [Denite]h :<C-u>Denite help<CR>
+  nnoremap <silent> [Denite]l :<C-u>Denite line<CR>
+
+  call denite#custom#map('_', "\<C-n>", 'move_to_next_line')
+  call denite#custom#map('_', "\<C-p>", 'move_to_prev_line')
+'''
+
+[[plugins]]
+repo = 'Shougo/neomru.vim'
+hook_add = '''
+  nnoremap <silent> [Denite]m :<C-u>Denite file_mru<CR>
+'''
+
+[[plugins]]
+repo = 'Shougo/neoyank.vim'
+hook_add = '''
+  nnoremap <silent> [Denite]y :<C-u>Denite neoyank<CR>
+'''
+
+[[plugins]]
+repo = 'Shougo/neoinclude.vim'
+
+[[plugins]]
+repo = 'Shougo/neosnippet.vim'
+hook_add = '''
+  imap <C-k> <Plug>(neosnippet_expand_or_jump)
+  smap <C-k> <Plug>(neosnippet_expand_or_jump)
+  xmap <C-k> <Plug>(neosnippet_expand_target)
+
+  smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
+        \ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+
+  if has('conceal')
+    set conceallevel=2 concealcursor=niv
+  endif
+'''
+
+[[plugins]]
+repo = 'Shougo/neosnippet-snippets'
+
+[[plugins]]
+repo = 'Shougo/deoplete.nvim'
+hook_add = '''
+  let g:deoplete#enable_at_startup = 1
+'''
+
+# deoplete source
+[[plugins]]
+repo = 'zchee/deoplete-clang'
+on_ft = ['c', 'cpp', 'cmake']
+depends = ['deoplete.nvim']
+hook_source = '''
+  let g:deoplete#sources#clang#libclang_path = '/usr/lib/llvm-3.8/lib/libclang-3.8.so.1'
+  let g:deoplete#sources#clang#clang_header = '/usr/include/clang'
+'''
+
+[[plugins]]
+repo = 'thinca/vim-quickrun'
+
+###
+# display
+###
+[[plugins]]
+repo = 'KeitaNakamura/highlighter.nvim'
+hook_add = '''
+  let g:highlighter#auto_update = 1
+  let g:heghlighter#project_root_signs = ['.git', '.clang-format']
+'''
+
+[[plugins]]
+repo = 'nathanaelkane/vim-indent-guides'
+hook_add = '''
+  let g:indent_guides_enable_on_vim_startup = 1
+  let g:indent_guides_exclude_filetypes = ['markdown']
+'''
+
+[[plugins]]
+repo = 'bronson/vim-trailing-whitespace'
+
+[[plugins]]
+repo = 'vim-jp/cpp-vim'
+on_ft = ['cpp']
+
+###
+# browser
+###
+repo = 'tyru/open-browser.vim'
+hook_add = '''
+  let g:netrw_nogx = 1 " disable netrw's gx mapping.
+  nmap gx <Plug>(openbrowser-smart_search)
+  vmap gx <Plug>(openbrowser-smart_search)
+'''
+
+[[plugins]]
+repo = 'kannokanno/previm'
+
+###
+# syntax
+###
+[[plugins]]
+repo = 'plasticboy/vim-markdown'
+on_ft = ['markdown']
+
+[[plugins]]
+repo = 'cespare/vim-toml'
+on_ft = ['toml']
+
+[[plugins]]
+repo = 'osyo-manga/vim-precious'
+depends = ['Shougo/context_filetype.vim']
+
+[[plugins]]
+repo = 'Shougo/context_filetype.vim'
+
+###
+# color scheme
+###
+
+[[plugins]] # status line
+repo = 'itchyny/lightline.vim'
+
+[[plugins]] # color scheme
+repo = 'tomasr/molokai'
+#on_event = ['VimEnter']
+hook_add = '''
+  augroup set_colorscheme
+    autocmd!
+    autocmd VimEnter * nested colorscheme molokai
+    autocmd VimEnter * nested syntax on
+  augroup END
+'''
