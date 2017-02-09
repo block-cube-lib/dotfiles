@@ -27,6 +27,7 @@ endif
 " system
 "
 set shellslash
+set sh=zsh
 
 "
 " completion
