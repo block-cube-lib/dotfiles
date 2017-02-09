@@ -27,7 +27,13 @@ endif
 " system
 "
 set shellslash
+
+"
+" shell
+"
 set sh=zsh
+tnoremap <silent> <ESC> <C-\><C-n>
+tnoremap <silent> <C-[> <C-\><C-n>
 
 "
 " completion
