@@ -15,12 +15,12 @@ elseif has('windows')
 endif
 let &runtimepath = expand(&runtimepath)
 
-if empty($XDG_CONFIG_HOME)
-  let &XDG_CONFIG_HOME= expand('~/.config')
+if $XDG_CONFIG_HOME == ''
+  let $XDG_CONFIG_HOME= expand('~/.config')
 endif
 
-if empty($XDG_CONFIG_HOME)
-  let &XDG_CACHE_HOME= expand('~/.cache')
+if $XDG_CACHE_HOME == ''
+  let $XDG_CACHE_HOME= expand('~/.cache')
 endif
 
 "
