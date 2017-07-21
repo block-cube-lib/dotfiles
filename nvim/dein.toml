@@ -64,10 +64,11 @@ hook_add = '''
 [[plugins]]
 repo = 'zchee/deoplete-clang'
 on_ft = ['c', 'cpp', 'cmake']
+if = '''filereadable($LIBCLANG_PATH) && isdirectory($CLANG_HEADER_PATH)'''
 depends = ['deoplete.nvim']
 hook_source = '''
-  let g:deoplete#sources#clang#libclang_path = '/usr/lib/llvm-3.8/lib/libclang-3.8.so.1'
-  let g:deoplete#sources#clang#clang_header = '/usr/include/clang'
+  let g:deoplete#sources#clang#libclang_path = $LIBCLANG_PATH
+  let g:deoplete#sources#clang#clang_header = $CLANG_HEADER_PATH
 '''
 
 [[plugins]]
