@@ -34,9 +34,6 @@ hook_add = '''
 '''
 
 [[plugins]]
-repo = 'Shougo/neoinclude.vim'
-
-[[plugins]]
 repo = 'Shougo/neosnippet.vim'
 hook_add = '''
   imap <C-k> <Plug>(neosnippet_expand_or_jump)
@@ -53,6 +50,10 @@ hook_add = '''
 
 [[plugins]]
 repo = 'Shougo/neosnippet-snippets'
+
+[[plugins]]
+depends = ['deoplete.nvim']
+repo = 'Shougo/neoinclude.vim'
 
 [[plugins]]
 repo = 'Shougo/deoplete.nvim'
