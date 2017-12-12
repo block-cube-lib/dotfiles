@@ -63,9 +63,26 @@ filetype indent plugin on
 "
 " system files
 "
-let &directory = expand(&directory)
+function! s:SafeMakeDirectory(name)
+  if !isdirectory(a:name)
+    call mkdir(a:name, 'p')
+  endif
+endfunction
+
+" swap file
+set swapfile
+let &directory = expand($XDG_CACHE_HOME). '/nvim/swap'
+call s:SafeMakeDirectory(&directory)
+
+" undo file
 set undofile
-let &undodir = $XDG_CACHE_HOME. '/nvim/undo'
+let &undodir = expand($XDG_CACHE_HOME). '/nvim/undo'
+call s:SafeMakeDirectory(&undodir)
+
+" backup file
+set backup
+let &backupdir = expand($XDG_CACHE_HOME). '/nvim/backup'
+call s:SafeMakeDirectory(&backupdir)
 
 "
 " editor
