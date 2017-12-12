@@ -134,8 +134,29 @@ repo = 'Shougo/context_filetype.vim'
 # color scheme
 ###
 
+[[plugins]]
+repo = 'itchyny/vim-gitbranch'
+
 [[plugins]] # status line
 repo = 'itchyny/lightline.vim'
+depends = ['itchyny/vim-gitbranch']
+hook_add = '''
+  function! LightLineFileName()
+    return expand('%') !=# '' ? expand('%') : '[No Name]'
+  endfunction
+
+  let g:lightline = {
+        \ 'colorscheme': 'powerline',
+        \ 'active': {
+        \   'left': [ ['mode', 'paste'],
+        \             ['gitbranch', 'readonly', 'filename', 'modified'] ]
+        \ },
+        \ 'component_function': {
+        \   'gitbranch': 'gitbranch#name',
+        \   'filename': 'LightLineFileName'
+        \ },
+        \}
+'''
 
 [[plugins]] # color scheme
 repo = 'tomasr/molokai'
