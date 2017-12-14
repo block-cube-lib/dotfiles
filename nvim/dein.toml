@@ -72,6 +72,19 @@ hook_source = '''
   let g:deoplete#sources#clang#clang_header = $CLANG_HEADER_PATH
 '''
 
+# completion
+[[plugins]]
+repo = 'OmniSharp/omnisharp-vim'
+on_ft = ['cs']
+hook_post_update = '''
+  if dein#util#_is_windows()
+    let cmd = 'MSBuild.exe server/OmniSharp.sln /p:Platform="Any CPU"'
+  else
+    let cmd = 'xbuild server/OmniSharp.sln'
+  endif
+  let g:dein#plugin.build = cmd
+'''
+
 [[plugins]]
 repo = 'thinca/vim-quickrun'
 
