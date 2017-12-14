@@ -177,13 +177,16 @@ hook_add = '''
 [[plugins]]
 repo = 'itchyny/vim-gitbranch'
 
+[[plugins]]
+repo = 'vim-scripts/dante.vim'
+
 [[plugins]] # color scheme
 repo = 'tomasr/molokai'
 #on_event = ['VimEnter']
 hook_add = '''
   augroup set_colorscheme
     autocmd!
-    autocmd VimEnter * nested colorscheme molokai
+    autocmd VimEnter * nested colorscheme dante
     autocmd VimEnter * nested syntax on
   augroup END
 '''
