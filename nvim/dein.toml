@@ -144,11 +144,10 @@ depends = ['Shougo/context_filetype.vim']
 repo = 'Shougo/context_filetype.vim'
 
 ###
-# color scheme
+# status line
 ###
-
 [[plugins]]
-repo = 'itchyny/vim-gitbranch'
+repo = 'vim-scripts/dante.vim'
 
 [[plugins]] # status line
 repo = 'itchyny/lightline.vim'
@@ -170,6 +169,13 @@ hook_add = '''
         \ },
         \}
 '''
+
+###
+# color scheme
+###
+
+[[plugins]]
+repo = 'itchyny/vim-gitbranch'
 
 [[plugins]] # color scheme
 repo = 'tomasr/molokai'
