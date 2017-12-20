@@ -1,7 +1,7 @@
 let s:dein_dir = $XDG_CACHE_HOME. '/nvim/dein'
 let s:dein_repo_dir = s:dein_dir. '/repos/github.com/Shougo/dein.vim'
 
-if !isdirectory(s:dein_repo_dir)
+if !isdirectory(expand(s:dein_repo_dir))
   execute '!git clone https://github.com/Shougo/dein.vim '. s:dein_repo_dir
 endif
 let &runtimepath = &runtimepath. ','. s:dein_repo_dir
