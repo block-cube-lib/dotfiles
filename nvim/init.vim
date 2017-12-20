@@ -64,7 +64,7 @@ filetype indent plugin on
 " system files
 "
 function! s:SafeMakeDirectory(name)
-  if !isdirectory(a:name)
+  if !isdirectory(expand(a:name))
     call mkdir(a:name, 'p')
   endif
 endfunction
