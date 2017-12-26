@@ -27,6 +27,10 @@ endif
 " system
 "
 set shellslash
+" set t_Co=255
+if has("termguicolors")
+  set termguicolors
+endif
 
 "
 " shell
