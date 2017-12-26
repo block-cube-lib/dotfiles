@@ -16,6 +16,7 @@ hook_add = '''
   nnoremap <silent> [Denite]f :<C-u>Denite file_rec<CR>
   nnoremap <silent> [Denite]h :<C-u>Denite help<CR>
   nnoremap <silent> [Denite]l :<C-u>Denite line<CR>
+  nnoremap <silent> [Denite]c :<C-u>Denite colorscheme<CR>
 
   call denite#custom#map('_', "\<C-n>", 'move_to_next_line')
   call denite#custom#map('_', "\<C-p>", 'move_to_prev_line')
@@ -103,6 +104,13 @@ repo = 'nathanaelkane/vim-indent-guides'
 hook_add = '''
   let g:indent_guides_enable_on_vim_startup = 1
   let g:indent_guides_exclude_filetypes = ['markdown']
+
+  let g:indent_guides_auto_colors = 0
+  augroup set_indent_guides
+    autocmd!
+    autocmd VimEnter,colorscheme * :hi IndentGuidesOdd  guifg=dark guibg=#393939 ctermfg=8 ctermbg=7
+    autocmd VimEnter,colorscheme * :hi IndentGuidesEven guifg=gray guibg=#303030 ctermfg=7 ctermbg=8
+  augroup END
 '''
 
 [[plugins]]
@@ -180,8 +188,21 @@ repo = 'itchyny/vim-gitbranch'
 [[plugins]]
 repo = 'vim-scripts/dante.vim'
 
-[[plugins]] # color scheme
+[[plugins]]
+repo = 'tyrannicaltoucan/vim-deep-space'
+
+[[plugins]]
+repo = 'cocopon/iceberg.vim'
+
+[[plugins]]
 repo = 'tomasr/molokai'
+
+[[plugins]]
+repo = 'nightsense/seabird'
+
+[[plugins]]
+repo = 'kamwitsta/nordisk'
+
 #on_event = ['VimEnter']
 hook_add = '''
   augroup set_colorscheme
