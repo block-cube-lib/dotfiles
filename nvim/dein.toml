@@ -87,6 +87,11 @@ hook_post_update = '''
 '''
 
 [[plugins]]
+repo = 'Robzz/deoplete-omnisharp'
+on_ft = ['cs']
+depends = ['omnisharp-vim']
+
+[[plugins]]
 repo = 'thinca/vim-quickrun'
 
 ###
@@ -108,7 +113,7 @@ hook_add = '''
   let g:indent_guides_auto_colors = 0
   augroup set_indent_guides
     autocmd!
-    autocmd VimEnter,colorscheme * :hi IndentGuidesOdd  guifg=dark guibg=#393939 ctermfg=8 ctermbg=7
+    autocmd VimEnter,colorscheme * :hi IndentGuidesOdd  guifg=gray guibg=#393939 ctermfg=8 ctermbg=7
     autocmd VimEnter,colorscheme * :hi IndentGuidesEven guifg=gray guibg=#303030 ctermfg=7 ctermbg=8
   augroup END
 '''
