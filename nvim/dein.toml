@@ -138,6 +138,10 @@ hook_add = '''
 [[plugins]]
 repo = 'kannokanno/previm'
 
+# text browser
+[[plugins]]
+repo = 'yuratomo/w3m.vim'
+
 ###
 # syntax
 ###
