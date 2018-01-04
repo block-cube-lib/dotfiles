@@ -141,6 +141,7 @@ repo = 'kannokanno/previm'
 # text browser
 [[plugins]]
 repo = 'yuratomo/w3m.vim'
+if = '''executable("w3m")'''
 
 ###
 # syntax
