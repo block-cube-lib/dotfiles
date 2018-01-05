@@ -2,7 +2,7 @@
 # history
 ###
 # file
-export HISTFILE=${XDG_CACHE_HOME}/zsh/.zhistory
+export HISTFILE=${XDG_CACHE_HOME:-$HOME/.cache}/zsh/.zhistory
 
 # count of history to save in memory
 export HISTSIZE=1000
