@@ -217,7 +217,7 @@ repo = 'kamwitsta/nordisk'
 hook_add = '''
   augroup set_colorscheme
     autocmd!
-    autocmd VimEnter * nested colorscheme dante
+    autocmd VimEnter * nested colorscheme iceberg
     autocmd VimEnter * nested syntax on
   augroup END
 '''
