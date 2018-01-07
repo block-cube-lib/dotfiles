@@ -38,9 +38,9 @@ endif
 "
 if !has('windows')
   set sh=zsh
-  tnoremap <silent> <ESC> <C-\><C-n>
-  tnoremap <silent> <C-[> <C-\><C-n>
 endif
+tnoremap <silent> <ESC> <C-\><C-n>
+tnoremap <silent> <C-[> <C-\><C-n>
 
 "
 " completion
