@@ -11,7 +11,8 @@ set fileformats=unix,dos,mac
 if has('unix')
 
 elseif has('windows')
-  let g:python3_host_prog = $PYTHON_PATH. '/python.exe'
+  let g:python3_host_prog=$PYTHON3_PATH. '/python.exe'
+  let g:python_host_prog=$PYTHON2_PATH. '/python.exe'
 endif
 let &runtimepath = expand(&runtimepath)
 
@@ -35,9 +36,11 @@ endif
 "
 " shell
 "
-set sh=zsh
-tnoremap <silent> <ESC> <C-\><C-n>
-tnoremap <silent> <C-[> <C-\><C-n>
+if !has('windows')
+  set sh=zsh
+  tnoremap <silent> <ESC> <C-\><C-n>
+  tnoremap <silent> <C-[> <C-\><C-n>
+endif
 
 "
 " completion
@@ -144,5 +147,6 @@ augroup END
 "
 " plugin
 "
-source $XDG_CONFIG_HOME/nvim/dein.vim
-
+if has('python3')
+  source $XDG_CONFIG_HOME/nvim/dein.vim
+endif
