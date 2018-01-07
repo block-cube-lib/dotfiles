@@ -103,6 +103,8 @@ set listchars=tab:>-,trail:~
 set number
 set ruler
 
+set conceallevel=0
+
 "
 " indent
 "
