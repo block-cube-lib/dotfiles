@@ -141,7 +141,9 @@ augroup file_type
   autocmd!
   autocmd BufNewFile, BufRead *.{md,mdwn,mkd,mkdn} setl filetype=markdown
   autocmd BufNewFile, BufRead *.cmake, CmakeLists.txt setl filetype=cmake
-  autocmd BufRead $LIBCXX_DIR/* setl filetype=cpp
+  if isdirectory($CXX_STD_LIB)
+    autocmd BufRead $CXX_STD_LIB/* setl filetype=cpp
+  endif
 augroup END
 
 "

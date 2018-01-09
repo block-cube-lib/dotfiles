@@ -1,3 +1,6 @@
+"
+" clang-format
+"
 function! s:CreateClangFormatCommand()
   let l:clang_format_command_list = ['clang-format', 'clang-format-devel']
 
@@ -43,3 +46,16 @@ nnoremap [Clang] <Nop>
 nmap <Space>c [Clang]
 
 nnoremap <silent> [Clang]f :call <SID>ClangFormat()<CR>
+
+"
+" path
+"
+function! s:AddPath(path)
+  if isdirectory(a:path) && stridx(&path, a:path) < 0
+    let &path=&path. ','. a:path
+  endif
+endfunction
+
+call s:AddPath($PYRITE_PATH)
+call s:AddPath($BOOST_PATH)
+call s:AddPath($CXX_STD_PATH)
