@@ -147,6 +147,20 @@ augroup file_type
 augroup END
 
 "
+" tag
+"
+function! UpdateTags()
+  let tag_list = split(glob("$HOME/tags/*"), "\n")
+  for file in tag_list
+    if stridx(&tags, file) < 0
+      let &tags = &tags. ','. file
+    endif
+  endfor
+endfunction
+
+call UpdateTags()
+
+"
 " plugin
 "
 if has('python3')
