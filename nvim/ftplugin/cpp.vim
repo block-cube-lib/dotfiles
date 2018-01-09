@@ -12,6 +12,9 @@ function! s:CreateClangFormatCommand()
   " version 5.x
   call add(l:clang_format_command_list, 'clang-format-5.0')
 
+  " version 6.x
+  call add(l:clang_format_command_list, 'clang-format-6.0')
+
   call filter(l:clang_format_command_list, 'executable(v:val)')
 
   if len(l:clang_format_command_list) > 0
