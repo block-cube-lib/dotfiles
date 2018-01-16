@@ -2,7 +2,7 @@
 # history
 ###
 # file
-mkdir -p ${XDG_CACHE_HOME:-$HOME/.cache}/zsh/.zhistory
+mkdir -p ${XDG_CACHE_HOME:-$HOME/.cache}/zsh/
 export HISTFILE=${XDG_CACHE_HOME:-$HOME/.cache}/zsh/.zhistory
 
 
