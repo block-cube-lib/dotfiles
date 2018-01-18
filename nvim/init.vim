@@ -49,6 +49,10 @@ set ignorecase
 set smartcase
 set wrapscan
 
+" file and directory name completion
+set wildignorecase
+set wildmode=list:full
+
 "
 " alert
 "
