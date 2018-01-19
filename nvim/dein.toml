@@ -90,7 +90,7 @@ hook_post_update = '''
 [[plugins]]
 repo = 'Robzz/deoplete-omnisharp'
 on_ft = ['cs']
-depends = ['omnisharp-vim']
+on_source = ['omnisharp-vim']
 
 [[plugins]]
 repo = 'thinca/vim-quickrun'
@@ -161,6 +161,12 @@ depends = ['Shougo/context_filetype.vim']
 
 [[plugins]]
 repo = 'Shougo/context_filetype.vim'
+
+###
+# editor
+###
+[[plugins]]
+repo = 'editorconfig/editorconfig-vim'
 
 ###
 # status line
