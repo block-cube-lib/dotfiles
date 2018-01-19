@@ -1,0 +1,9 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =7
+let g:netrw_dirhist_1='/Users/masato.tanaka/Development/cpp/pyrite/pyrite'
+let g:netrw_dirhist_2='/Users/masato.tanaka/Development/cpp/pyrite/pyrite/type_traits'
+let g:netrw_dirhist_3='/Users/masato.tanaka/Development/cpp/pyrite/pyrite'
+let g:netrw_dirhist_4='/Users/masato.tanaka/Development/cpp/pyrite/pyrite/mpl'
+let g:netrw_dirhist_5='/Users/masato.tanaka/Development/cpp/pyrite/pyrite'
+let g:netrw_dirhist_6='/Users/masato.tanaka/Development/cpp/pyrite/pyrite/random'
+let g:netrw_dirhist_7='/Users/masato.tanaka/Development/cpp/pyrite/pyrite'
