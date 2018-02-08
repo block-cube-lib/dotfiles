@@ -25,6 +25,10 @@ zle -N history-beginning-search-forward-end history-search-end
 bindkey '^P' history-beginning-search-backward-end
 bindkey '^N' history-beginning-search-forward-end
 
+# color
+autoload -Uz colors
+colors
+
 # vcs
 autoload -Uz vcs_info
 precmd () { vcs_info }
@@ -35,21 +39,18 @@ zstyle ':vcs_info:git:*' unstagedstr "%F{red}+"
 zstyle ':vcs_info:*' formats "%F{green}%c%u[%b]%f"
 zstyle ':vcs_info:*' actionformats '[%b|%a]'
 
-# color
-autoload -Uz colors
-colors
-
+# prompt
 function left_prompt
 {
   # empty line
   local prompt="\n"
 
   # current directory
-  prompt="${prompt}%{$fg[cyan]%}%~%{$reset_color%} "
+  prompt="${prompt}%{$fg[cyan]%}%~%{$reset_color%}"
 
   # git branch name
-  if [[ -n ${vcs_info_msg_0_} ]]; then
-    prompt="${prompt}${vcs_info_msg_0_}"
+  if [[ -n "${vcs_info_msg_0_}" ]]; then
+    prompt="${prompt} ${vcs_info_msg_0_}"
   fi
 
   # empty line
@@ -74,5 +75,4 @@ function right_prompt
 }
 
 PROMPT='`left_prompt`'
-
 RPROMPT='`right_prompt`'
