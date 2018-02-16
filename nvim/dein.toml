@@ -74,10 +74,19 @@ hook_source = '''
   let g:deoplete#sources#clang#clang_header = $CLANG_HEADER_PATH
 '''
 
+[[plugins]]
+repo = 'landaire/deoplete-swift'
+on_ft = ['swift']
+if = '''has('mac') && executable('sourcekitten')'''
+hook_source = '''
+  let g:deoplete#sources#swift#daemon_autostart = 1
+'''
+
 # completion
 [[plugins]]
 repo = 'OmniSharp/omnisharp-vim'
 on_ft = ['cs']
+if = '''(dein#util#_is_windows()) && executable("MSBuild") || executable("xbuild")'''
 hook_post_update = '''
   if dein#util#_is_windows()
     let cmd = 'MSBuild.exe server/OmniSharp.sln /p:Platform="Any CPU"'
@@ -145,7 +154,7 @@ repo = 'yuratomo/w3m.vim'
 if = '''executable("w3m")'''
 
 ###
-# syntax
+# syntax highlight
 ###
 [[plugins]]
 repo = 'plasticboy/vim-markdown'
@@ -156,11 +165,31 @@ repo = 'cespare/vim-toml'
 on_ft = ['toml']
 
 [[plugins]]
+repo = 'keith/swift.vim'
+on_ft = ['swift']
+
+[[plugins]]
 repo = 'osyo-manga/vim-precious'
 depends = ['Shougo/context_filetype.vim']
 
 [[plugins]]
 repo = 'Shougo/context_filetype.vim'
+
+###
+# syntax check
+###
+[[plugins]]
+repo = 'scrooloose/syntastic'
+hook_add = '''
+  let g:syntastic_mode_map = {
+        \ 'mode': 'passive',
+        \ 'active_filetypes': ['swift']
+        \}
+'''
+
+[[plugins]]
+repo = 'kballard/vim-swift'
+on_ft = ['swift']
 
 ###
 # editor
