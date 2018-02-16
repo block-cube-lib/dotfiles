@@ -141,13 +141,9 @@ set wildmenu
 "
 " filetype
 "
-augroup file_type
+augroup set_filetypes
   autocmd!
-  autocmd BufNewFile, BufRead *.{md,mdwn,mkd,mkdn} setl filetype=markdown
-  autocmd BufNewFile, BufRead *.cmake, CmakeLists.txt setl filetype=cmake
-  if isdirectory($CXX_STD_LIB)
-    autocmd BufRead $CXX_STD_LIB/* setl filetype=cpp
-  endif
+  autocmd BufNewFile,BufRead *.swift setf swift
 augroup END
 
 "
