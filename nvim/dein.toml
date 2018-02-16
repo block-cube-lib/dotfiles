@@ -64,6 +64,7 @@ hook_add = '''
 '''
 
 # deoplete source
+# c++
 [[plugins]]
 repo = 'zchee/deoplete-clang'
 on_ft = ['c', 'cpp', 'cmake']
@@ -74,6 +75,7 @@ hook_source = '''
   let g:deoplete#sources#clang#clang_header = $CLANG_HEADER_PATH
 '''
 
+# swift
 [[plugins]]
 repo = 'landaire/deoplete-swift'
 on_ft = ['swift']
@@ -82,7 +84,7 @@ hook_source = '''
   let g:deoplete#sources#swift#daemon_autostart = 1
 '''
 
-# completion
+# c# completion
 [[plugins]]
 repo = 'OmniSharp/omnisharp-vim'
 on_ft = ['cs']
@@ -96,13 +98,32 @@ hook_post_update = '''
   let g:dein#plugin.build = cmd
 '''
 
+# c#
 [[plugins]]
 repo = 'Robzz/deoplete-omnisharp'
 on_ft = ['cs']
 on_source = ['omnisharp-vim']
 
+# vim
+repo = 'Shougo/neco-vim'
+on_ft = ['vim']
+
+###
+# utility
+###
 [[plugins]]
 repo = 'thinca/vim-quickrun'
+
+[[plugins]]
+repo = 'scrooloose/nerdtree'
+hook_add = '''
+  nnoremap [NERDTree] <Nop>
+  nmap <Space>n [NERDTree]
+  nnoremap <silent> [NERDTree] :<C-u>NERDTreeToggle<CR>
+
+  call denite#custom#map('_', "\<C-n>", 'move_to_next_line')
+  call denite#custom#map('_', "\<C-p>", 'move_to_prev_line')
+'''
 
 ###
 # display
