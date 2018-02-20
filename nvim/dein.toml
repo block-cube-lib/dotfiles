@@ -80,6 +80,7 @@ hook_source = '''
 repo = 'landaire/deoplete-swift'
 on_ft = ['swift']
 if = '''has('mac') && executable('sourcekitten')'''
+depends = ['deoplete.nvim']
 hook_source = '''
   let g:deoplete#sources#swift#daemon_autostart = 1
 '''
@@ -103,10 +104,18 @@ hook_post_update = '''
 repo = 'Robzz/deoplete-omnisharp'
 on_ft = ['cs']
 on_source = ['omnisharp-vim']
+depends = ['deoplete.nvim']
 
 # vim
 repo = 'Shougo/neco-vim'
 on_ft = ['vim']
+depends = ['deoplete.nvim']
+
+# python
+[[plugins]]
+repo = 'zchee/deoplete-jedi'
+on_ft = ['python']
+depends = ['deoplete.nvim']
 
 ###
 # utility
