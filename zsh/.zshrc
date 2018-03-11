@@ -74,5 +74,5 @@ function right_prompt
   fi
 }
 
-PROMPT='`left_prompt`'
-RPROMPT='`right_prompt`'
+PROMPT="`left_prompt`"
+RPROMPT="`right_prompt`"
