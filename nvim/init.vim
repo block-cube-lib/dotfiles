@@ -144,6 +144,7 @@ set wildmenu
 augroup set_filetypes
   autocmd!
   autocmd BufNewFile,BufRead *.swift setf swift
+  autocmd BufNewFile,BufRead *.pu setf plantuml
 augroup END
 
 "

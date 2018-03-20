@@ -234,6 +234,10 @@ repo = 'keith/swift.vim'
 on_ft = ['swift']
 
 [[plugins]]
+repo = 'aklt/plantuml-syntax'
+on_ft = ['plantuml']
+
+[[plugins]]
 repo = 'osyo-manga/vim-precious'
 depends = ['Shougo/context_filetype.vim']
 
