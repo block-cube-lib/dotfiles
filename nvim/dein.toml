@@ -238,6 +238,10 @@ repo = 'aklt/plantuml-syntax'
 on_ft = ['plantuml']
 
 [[plugins]]
+repo = 'dag/vim-fish'
+on_ft = ['fish']
+
+[[plugins]]
 repo = 'osyo-manga/vim-precious'
 depends = ['Shougo/context_filetype.vim']
 
