@@ -145,6 +145,7 @@ augroup set_filetypes
   autocmd!
   autocmd BufNewFile,BufRead *.swift setf swift
   autocmd BufNewFile,BufRead *.pu setf plantuml
+  autocmd BufNewFile,BufRead *.fish setf fish
 augroup END
 
 "
