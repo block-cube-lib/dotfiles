@@ -1,7 +1,4 @@
 
-[[plugins]] # plugin manager
-repo = 'Shougo/dein.vim'
-
 ###
 # Denite
 ###
@@ -52,6 +49,7 @@ hook_add = '''
 
 [[plugins]]
 repo = 'Shougo/neosnippet-snippets'
+depends = 'deoplete.nvim'
 
 [[plugins]]
 depends = ['deoplete.nvim']
@@ -119,38 +117,30 @@ depends = ['deoplete.nvim']
 
 # rust
 [[plugins]]
-repo = 'sebastianmarkow/deoplete-rust'
+repo = 'rust-lang/rust.vim'
 on_ft = ['rust']
-if = '''executable('cargo')'''
 hook_source = '''
-if !executable('racer')
-  execute("!cargo install racer")
-endif
-
-let g:rust_source_path = $XDG_CACHE_HOME. "/rust-lang/src"
-if !isdirectory(expand(g:rust_source_path))
-  let g:rust_rep_path = $XDG_CACHE_HOME. "/rust-lang"
-  execute("!git clone --depth=1 https://github.com/rust-lang/rust.git ". g:rust_rep_path)
-endif
-let g:deoplete#sources#rust#rust_source_path=g:rust_source_path
-
-if (has('win64') || has('win32')) && !has('win32unix')
-  let g:deoplete#sources#rust#racer_binary=system("which racer")
-else
-  let g:deoplete#sources#rust#racer_binary=system("where racer")
-endif
-if 0 <= stridx(g:deoplete#sources#rust#racer_binary, "\n")
-  let g:deoplete#sources#rust#racer_binary = split(g:deoplete#sources#rust#racer_binary, "\n")[0]
-endif
-
-let g:deoplete#sources#rust#show_duplicates=1
-let g:deoplete#sources#rust#disable_keymap=1
-let g:deoplete#sources#documentation_max_height=20
+  let g:rustfmt_autosave = 0
 '''
-hook_add = '''
-nmap <buffer> gd <plug>DeopleteRustGoToDefinitionDefault
-nmap <buffer> K  <plug>DeopleteRustShowDocumentation
+
+# language server
+[[plugins]]
+repo = 'autozimu/LanguageClient-neovim'
+on_ft = ['rust']
+hook_post_update = '''
+  let g:dein#plugin.build = './install.sh'
 '''
+hook_source = '''
+  " set hidden
+  let g:LanguageClient_serverCommands = {
+        \ 'rust': ['rustup', 'run', 'stable', 'rls']
+        \}
+  let g:LanguageClient_autoStart = 1
+  nnoremap <silent> K :call LanguageClient_textDocument_hover()<CR>
+  nnoremap <silent> gd :call LanguageClient_textDocument_definition()<CR>
+  nnoremap <silent> <F2> :call LanguageClient_textDocument_rename()<CR>
+'''
+
 
 ###
 # utility
