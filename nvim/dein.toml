@@ -109,12 +109,6 @@ repo = 'Shougo/neco-vim'
 on_ft = ['vim']
 depends = ['deoplete.nvim']
 
-# python
-[[plugins]]
-repo = 'zchee/deoplete-jedi'
-on_ft = ['python']
-depends = ['deoplete.nvim']
-
 # rust
 [[plugins]]
 repo = 'rust-lang/rust.vim'
@@ -126,14 +120,15 @@ hook_source = '''
 # language server
 [[plugins]]
 repo = 'autozimu/LanguageClient-neovim'
-on_ft = ['rust']
+rev = 'next'
+on_ft = ['rust', 'python']
 hook_post_update = '''
   let g:dein#plugin.build = './install.sh'
 '''
 hook_source = '''
-  " set hidden
   let g:LanguageClient_serverCommands = {
-        \ 'rust': ['rustup', 'run', 'stable', 'rls']
+        \ 'rust': ['rustup', 'run', 'stable', 'rls'],
+        \ 'python': ['pyls']
         \}
   let g:LanguageClient_autoStart = 1
   nnoremap <silent> K :call LanguageClient_textDocument_hover()<CR>
@@ -175,12 +170,12 @@ hook_add = '''
   let g:indent_guides_enable_on_vim_startup = 1
   let g:indent_guides_exclude_filetypes = ['markdown']
 
-  let g:indent_guides_auto_colors = 0
-  augroup set_indent_guides
-    autocmd!
-    autocmd VimEnter,colorscheme * :hi IndentGuidesOdd  guifg=gray guibg=#393939 ctermfg=8 ctermbg=7
-    autocmd VimEnter,colorscheme * :hi IndentGuidesEven guifg=gray guibg=#303030 ctermfg=7 ctermbg=8
-  augroup END
+  let g:indent_guides_auto_colors = 1
+  "augroup set_indent_guides
+  "  autocmd!
+  "  autocmd VimEnter,colorscheme * :hi IndentGuidesOdd  guifg=gray guibg=#393939 ctermfg=8 ctermbg=7
+  "  autocmd VimEnter,colorscheme * :hi IndentGuidesEven guifg=gray guibg=#303030 ctermfg=7 ctermbg=8
+  "augroup END
 '''
 
 [[plugins]]
@@ -274,9 +269,6 @@ repo = 'editorconfig/editorconfig-vim'
 ###
 # status line
 ###
-[[plugins]]
-repo = 'vim-scripts/dante.vim'
-
 [[plugins]] # status line
 repo = 'itchyny/lightline.vim'
 depends = ['itchyny/vim-gitbranch']
@@ -323,11 +315,14 @@ repo = 'nightsense/seabird'
 [[plugins]]
 repo = 'kamwitsta/nordisk'
 
+[[plugins]]
+repo = 'w0ng/vim-hybrid'
+
 #on_event = ['VimEnter']
 hook_add = '''
   augroup set_colorscheme
     autocmd!
-    autocmd VimEnter * nested colorscheme iceberg
     autocmd VimEnter * nested syntax on
+    autocmd VimEnter * nested colorscheme iceberg
   augroup END
 '''
