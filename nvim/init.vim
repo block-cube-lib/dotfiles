@@ -36,9 +36,6 @@ endif
 "
 " shell
 "
-if !has('windows')
-  set sh=zsh
-endif
 tnoremap <silent> <ESC> <C-\><C-n>
 tnoremap <silent> <C-[> <C-\><C-n>
 
@@ -105,6 +102,7 @@ set list
 set listchars=tab:>-,trail:~
 
 set number
+set cursorline
 set ruler
 
 set hidden
