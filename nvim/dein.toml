@@ -109,6 +109,12 @@ repo = 'Shougo/neco-vim'
 on_ft = ['vim']
 depends = ['deoplete.nvim']
 
+# python
+[[plugins]]
+repo = 'zchee/deoplete-jedi'
+on_ft = ['python']
+depends = ['deoplete.nvim']
+
 # rust
 [[plugins]]
 repo = 'rust-lang/rust.vim'
@@ -121,14 +127,13 @@ hook_source = '''
 [[plugins]]
 repo = 'autozimu/LanguageClient-neovim'
 rev = 'next'
-on_ft = ['rust', 'python']
+on_ft = ['rust']
 hook_post_update = '''
   let g:dein#plugin.build = './install.sh'
 '''
 hook_source = '''
   let g:LanguageClient_serverCommands = {
-        \ 'rust': ['rustup', 'run', 'stable', 'rls'],
-        \ 'python': ['pyls']
+        \ 'rust': ['rustup', 'run', 'stable', 'rls']
         \}
   let g:LanguageClient_autoStart = 1
   nnoremap <silent> K :call LanguageClient_textDocument_hover()<CR>
