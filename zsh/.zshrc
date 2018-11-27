@@ -29,9 +29,12 @@ bindkey '^N' history-beginning-search-forward-end
 autoload -Uz colors
 colors
 
+# hook
+autoload -Uz add-zsh-hook
+
 # vcs
 autoload -Uz vcs_info
-precmd () { vcs_info }
+add-zsh-hook precmd vcs_info
 
 zstyle ':vcs_info:git:*' check-for-changes true
 zstyle ':vcs_info:git:*' stagedstr "%F{yellow}!"
@@ -40,39 +43,37 @@ zstyle ':vcs_info:*' formats "%F{green}%c%u[%b]%f"
 zstyle ':vcs_info:*' actionformats '[%b|%a]'
 
 # prompt
-function left_prompt
+function left_prompt()
 {
-  # empty line
-  local prompt="\n"
+  # git branch name
+  local git_status=""
+  if [[ -n "${vcs_info_msg_0_}" ]]; then
+    git_status="${vcs_info_msg_0_}"
+  fi
 
   # current directory
-  prompt="${prompt}%{$fg[cyan]%}%~%{$reset_color%}"
-
-  # git branch name
-  if [[ -n "${vcs_info_msg_0_}" ]]; then
-    prompt="${prompt} ${vcs_info_msg_0_}"
-  fi
-
-  # empty line
-  local prompt="${prompt}\n"
+  local current_dir="%{$fg[cyan]%}%~%{$reset_color%}"
 
   # >>>
-  prompt="${prompt}%{$fg_bold[red]%}>%{$reset_color%}"
-  prompt="${prompt}%{$fg_bold[yellow]%}>%{$reset_color%}"
-  prompt="${prompt}%{$fg_bold[green]%}>%{$reset_color%}"
-  prompt="${prompt} "
+  local command_line_header=""
+  command_line_header="${command_line_header}%{$fg_bold[red]%}>%{$reset_color%}"
+  command_line_header="${command_line_header}%{$fg_bold[yellow]%}>%{$reset_color%}"
+  command_line_header="${command_line_header}%{$fg_bold[green]%}>%{$reset_color%}"
 
-  echo -e ${prompt}
+  # empty line
+  PROMPT="
+${current_dir} ${git_status}
+${command_line_header} "
 }
 
-function right_prompt
+function right_prompt()
 {
   if [[ ${?} -eq 0 ]]; then
-    echo %{$fg[blue]%}o%{$reset_color%}
+    RPROMPT="%{$fg[blue]%}o%{$reset_color%}"
   else
-    echo %{$fg[red]%}x $?%{$reset_color%}
+    RPROMPT="%{$fg[red]%}x $?%{$reset_color%}"
   fi
 }
 
-PROMPT='`left_prompt`'
-RPROMPT='`right_prompt`'
+add-zsh-hook precmd left_prompt
+add-zsh-hook precmd right_prompt
