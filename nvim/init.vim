@@ -32,6 +32,9 @@ set shellslash
 if has("termguicolors")
   set termguicolors
 endif
+if executable('fish')
+  set sh=fish
+endif
 
 "
 " shell
