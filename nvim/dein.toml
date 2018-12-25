@@ -132,10 +132,12 @@ hook_post_update = '''
   let g:dein#plugin.build = './install.sh'
 '''
 hook_source = '''
-  let g:LanguageClient_serverCommands = {
-        \ 'rust': ['rustup', 'run', 'stable', 'rls'],
-        \ 'python': ['pyls']
-        \}
+  let g:LanguageClient_serverCommands = {}
+
+  if executable('rls')
+    let g:LanguageClient_serverCommands = { 'rust': ['rls'] }
+  endif
+
   let g:LanguageClient_autoStart = 1
   nnoremap <silent> K :call LanguageClient_textDocument_hover()<CR>
   nnoremap <silent> gd :call LanguageClient_textDocument_definition()<CR>
