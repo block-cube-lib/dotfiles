@@ -147,6 +147,18 @@ hook_source = '''
 '''
 
 ###
+# LSP symbol viewer
+###
+[[plugins]]
+repo = 'liuchengxu/vista.vim'
+depends = ['LanguageClient-neovim']
+hook_source = '''
+  nnoremap [Vista] <Nop>
+  nmap <Space>v [Vista]
+  nnoremap <silent> [Vista] :<C-u>Vista!!<CR>
+'''
+
+###
 # filer
 ###
 [[plugins]]
