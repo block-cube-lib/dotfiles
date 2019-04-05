@@ -1,0 +1,125 @@
+# language server
+[[plugins]]
+repo = 'autozimu/LanguageClient-neovim'
+rev = 'next'
+on_ft = ['rust']
+hook_post_update = '''
+  let g:dein#plugin.build = './install.sh'
+'''
+hook_source = '''
+  let g:LanguageClient_serverCommands = {}
+  if executable('rls')
+    let g:LanguageClient_serverCommands['rust'] = ['rustup', 'run', 'stable', 'rls']
+  endif
+
+  nnoremap <silent> K :call LanguageClient#textDocument_hover()<CR>
+  nnoremap <silent> gd :call LanguageClient#textDocument_definition()<CR>
+  nnoremap <silent> <F2> :call LanguageClient#textDocument_rename()<CR>
+
+  let g:LanguageClient_autoStart = 1
+  " set completefunc=LanguageClient#complete
+'''
+
+[[plugins]]
+repo = 'Shougo/echodoc.vim'
+depends = ['LanguageClient-neovim']
+
+###
+# LSP symbol viewer
+###
+[[plugins]]
+repo = 'liuchengxu/vista.vim'
+depends = ['LanguageClient-neovim']
+hook_add = '''
+  nnoremap [Vista] <Nop>
+  nmap <Space>v [Vista]
+  nnoremap <silent> [Vista] :<C-u>Vista!!<CR>
+'''
+
+# markdown
+[[plugins]]
+repo = 'plasticboy/vim-markdown'
+on_ft = ['markdown']
+
+# toml
+[[plugins]]
+repo = 'cespare/vim-toml'
+on_ft = ['toml']
+
+# plantuml
+[[plugins]]
+repo = 'aklt/plantuml-syntax'
+on_ft = ['plantuml']
+
+# fish
+[[plugins]]
+repo = 'dag/vim-fish'
+on_ft = ['fish']
+
+# vim
+repo = 'Shougo/neco-vim'
+on_ft = ['vim']
+depends = ['deoplete.nvim']
+
+# c++
+[[plugins]]
+repo = 'vim-jp/cpp-vim'
+on_ft = ['cpp']
+
+[[plugins]]
+repo = 'zchee/deoplete-clang'
+on_ft = ['c', 'cpp', 'cmake']
+if = '''filereadable($LIBCLANG_PATH) && isdirectory($CLANG_HEADER_PATH)'''
+depends = ['deoplete.nvim']
+hook_source = '''
+  let g:deoplete#sources#clang#libclang_path = $LIBCLANG_PATH
+  let g:deoplete#sources#clang#clang_header = $CLANG_HEADER_PATH
+'''
+
+# swift
+[[plugins]]
+repo = 'keith/swift.vim'
+on_ft = ['swift']
+
+[[plugins]]
+repo = 'landaire/deoplete-swift'
+on_ft = ['swift']
+if = '''has('mac') && executable('sourcekitten')'''
+depends = ['deoplete.nvim']
+hook_source = '''
+  let g:deoplete#sources#swift#daemon_autostart = 1
+'''
+
+# c# completion
+[[plugins]]
+repo = 'OmniSharp/omnisharp-vim'
+on_ft = ['cs']
+if = '''(dein#util#_is_windows()) && executable("MSBuild") || executable("xbuild")'''
+hook_post_update = '''
+  if dein#util#_is_windows()
+    let cmd = 'MSBuild.exe server/OmniSharp.sln /p:Platform="Any CPU"'
+  else
+    let cmd = 'xbuild server/OmniSharp.sln'
+  endif
+  let g:dein#plugin.build = cmd
+'''
+
+# c#
+[[plugins]]
+repo = 'Robzz/deoplete-omnisharp'
+on_ft = ['cs']
+depends = ['omnisharp-vim', 'deoplete.nvim']
+
+# rust
+[[plugins]]
+repo = 'rust-lang/rust.vim'
+on_ft = ['rust']
+hook_source = '''
+let g:rustfmt_autosave = 0
+
+if executable("rustfmt")
+  nnoremap [RustFmt] <Nop>
+  nmap <Space>f [RustFmt]
+  nnoremap <silent> [RustFmt] :<C-u>RustFmt<CR>
+endif
+'''
