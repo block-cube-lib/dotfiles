@@ -1,2 +1,5 @@
 # neovim
 .netrwhist
+
+# fish
+fish/fishd.*
