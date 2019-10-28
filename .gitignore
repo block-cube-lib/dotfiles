@@ -1,2 +1,5 @@
 # neovim
 .netrwhist
+
+configstore/
+NuGet/
