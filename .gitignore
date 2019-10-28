@@ -2,4 +2,12 @@
 .netrwhist
 
 # fish
+fish/fish_variables
 fish/fishd.*
+
+# fisher
+fisher/
+
+
+configstore/
+NuGet/
