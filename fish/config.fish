@@ -4,7 +4,7 @@ function add_path_if_need
     contains $v $PATH -- or (contains $v $fish_user_paths)
     if test $status -ne 0
       echo "Add $v to $fish_user_paths"
-      set -x fish_user_paths $v fish_user_paths
+      set -U fish_user_paths $v fish_user_paths
       set result (true)
     end
   end
