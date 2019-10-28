@@ -9,5 +9,10 @@ fish/fishd.*
 fisher/
 
 
-configstore/
 NuGet/
+configstore/
+gcloud/
+gtk-2.0/
+karabiner/
+xbuild/
+yarn/
