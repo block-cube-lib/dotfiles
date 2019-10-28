@@ -126,3 +126,9 @@ if executable("rustfmt")
   nnoremap <silent> [RustFmt] :<C-u>RustFmt<CR>
 endif
 '''
+
+# fish
+[[plugins]]
+repo = 'dag/vim-fish'
+on_ft = ['fish']
+depends = ['deoplete.nvim']
