@@ -56,5 +56,5 @@ setup_starship
 # setup pyenv
 type -q pyenv
 if test $status -eq 0
-  . (pyenv init - | psub)
+  source (pyenv init - | psub)
 end
