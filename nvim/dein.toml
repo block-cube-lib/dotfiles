@@ -58,10 +58,13 @@ hook_add = '''
         \ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
 
   if has('conceal')
-    set conceallevel=0
+    set conceallevel=2
     set concealcursor=niv
   endif
 '''
+on_i  = 1
+on_ft = ['snippet']
+depends = ['neosnippet-snippets']
 
 [[plugins]]
 repo = 'Shougo/neosnippet-snippets'
