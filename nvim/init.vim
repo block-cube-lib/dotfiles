@@ -39,8 +39,7 @@ endif
 "
 " shell
 "
-tnoremap <silent> <ESC> <C-\><C-n>
-tnoremap <silent> <C-[> <C-\><C-n>
+tnoremap <silent> <C-Q> <C-\><C-n>
 
 "
 " completion
