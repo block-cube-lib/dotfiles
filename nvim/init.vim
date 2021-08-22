@@ -39,6 +39,9 @@ endif
 "
 " shell
 "
+if has('windows') && executable('nu')
+  set shell=nu.exe
+endif
 tnoremap <silent> <C-Q> <C-\><C-n>
 
 "
