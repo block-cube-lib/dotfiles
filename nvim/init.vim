@@ -125,7 +125,9 @@ set cindent
 set iminsert=0
 set imsearch=0
 
-set ambiwidth=double
+if !exists('g:vscode')
+  set ambiwidth=double
+endif
 
 set nowrap            " scroll
 
@@ -168,9 +170,11 @@ endfunction
 
 call UpdateTags()
 
-"
-" plugin
-"
-if has('python3')
-  source $XDG_CONFIG_HOME/nvim/dein.vim
+if !exists('g:vscode')
+  "
+  " plugin
+  "
+  if has('python3')
+    source $XDG_CONFIG_HOME/nvim/dein.vim
+  endif
 endif

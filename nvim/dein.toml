@@ -1,120 +1,11 @@
-
-###
-# Denite
-###
+[[plugins]]
+repo = 'Shougo/dein.vim'
 
 [[plugins]]
-repo = 'Shougo/denite.nvim'
-hook_add = '''
-  nnoremap [Denite] <Nop>
-  nmap <Space>d [Denite]
-  nnoremap <silent> [Denite]b :<C-u>Denite buffer<CR>
-  nnoremap <silent> [Denite]d :<C-u>Denite directory_rec<CR>
-  nnoremap <silent> [Denite]f :<C-u>Denite file/rec<CR>
-  nnoremap <silent> [Denite]h :<C-u>Denite help<CR>
-  nnoremap <silent> [Denite]l :<C-u>Denite line<CR>
-  nnoremap <silent> [Denite]c :<C-u>Denite colorscheme<CR>
-
-  call denite#custom#map('_', "\<C-n>", 'move_to_next_line')
-  call denite#custom#map('_', "\<C-p>", 'move_to_prev_line')
-
-  autocmd FileType denite call s:denite_my_settings()
-  function! s:denite_my_settings() abort
-    nnoremap <silent><buffer><expr> <CR>
-          \ denite#do_map('do_action')
-    nnoremap <silent><buffer><expr> d
-          \ denite#do_map('do_action', 'delete')
-    nnoremap <silent><buffer><expr> p
-          \ denite#do_map('do_action', 'preview')
-    nnoremap <silent><buffer><expr> q
-          \ denite#do_map('quit')
-    nnoremap <silent><buffer><expr> i
-          \ denite#do_map('open_filter_buffer')
-    nnoremap <silent><buffer><expr> <Space>
-          \ denite#do_map('toggle_select').'j'
-  endfunction<Paste>
-'''
+repo = 'vim-denops/denops.vim'
 
 [[plugins]]
-repo = 'Shougo/neomru.vim'
-hook_add = '''
-  nnoremap <silent> [Denite]m :<C-u>Denite file_mru<CR>
-'''
-
-[[plugins]]
-repo = 'Shougo/neoyank.vim'
-hook_add = '''
-  nnoremap <silent> [Denite]y :<C-u>Denite neoyank<CR>
-'''
-
-[[plugins]]
-repo = 'Shougo/neosnippet.vim'
-hook_add = '''
-  imap <C-k> <Plug>(neosnippet_expand_or_jump)
-  smap <C-k> <Plug>(neosnippet_expand_or_jump)
-  xmap <C-k> <Plug>(neosnippet_expand_target)
-
-  smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
-        \ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
-
-  if has('conceal')
-    set conceallevel=2
-    set concealcursor=niv
-  endif
-'''
-on_i  = 1
-on_ft = ['snippet']
-depends = ['neosnippet-snippets']
-
-[[plugins]]
-repo = 'Shougo/neosnippet-snippets'
-depends = 'deoplete.nvim'
-
-[[plugins]]
-depends = ['deoplete.nvim']
-repo = 'Shougo/neoinclude.vim'
-
-[[plugins]]
-repo = 'Shougo/deoplete.nvim'
-hook_add = '''
-  let g:deoplete#enable_at_startup = 1
-'''
-
-###
-# filer
-###
-[[plugins]]
-repo = "Shougo/defx.nvim"
-hook_add = '''
-  nnoremap [defx] <Nop>
-  nmap <Space>F [defx]
-  nnoremap <silent> [defx] :<C-u>Defx<CR>
-  autocmd FileType defx call s:defx_my_settings()
-  function! s:defx_my_settings() abort
-    nnoremap <silent><buffer><expr> <CR>
-          \ defx#do_action('open')
-    nnoremap <silent><buffer><expr> K
-          \ defx#do_action('new_directory')
-    nnoremap <silent><buffer><expr> N
-          \ defx#do_action('new_file')
-    nnoremap <silent><buffer><expr> d
-          \ defx#do_action('remove')
-    nnoremap <silent><buffer><expr> r
-          \ defx#do_action('rename')
-    nnoremap <silent><buffer><expr> h
-          \ defx#do_action('cd', ['..'])
-    nnoremap <silent><buffer><expr> ~
-          \ defx#do_action('cd')
-    nnoremap <silent><buffer><expr> <Space>
-          \ defx#do_action('toggle_select') . 'j'
-    nnoremap <silent><buffer><expr> j
-          \ line('.') == line('$') ? 'gg' : 'j'
-    nnoremap <silent><buffer><expr> k
-          \ line('.') == 1 ? 'G' : 'k'
-    nnoremap <silent><buffer><expr> <C-l>
-          \ defx#do_action('redraw')
-  endfunction
-'''
+repo = 'nvim-lua/completion-nvim'
 
 ###
 # utility
@@ -128,9 +19,6 @@ hook_add = '''
   nnoremap [NERDTree] <Nop>
   nmap <Space>n [NERDTree]
   nnoremap <silent> [NERDTree] :<C-u>NERDTreeToggle<CR>
-
-  call denite#custom#map('_', "\<C-n>", 'move_to_next_line')
-  call denite#custom#map('_', "\<C-p>", 'move_to_prev_line')
 '''
 
 ###
@@ -177,13 +65,6 @@ repo = 'kannokanno/previm'
 [[plugins]]
 repo = 'yuratomo/w3m.vim'
 if = '''executable("w3m")'''
-
-[[plugins]]
-repo = 'osyo-manga/vim-precious'
-depends = ['Shougo/context_filetype.vim']
-
-[[plugins]]
-repo = 'Shougo/context_filetype.vim'
 
 ###
 # syntax check

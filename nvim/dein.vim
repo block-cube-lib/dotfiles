@@ -6,13 +6,18 @@ if !isdirectory(expand(s:dein_repo_dir))
 endif
 let &runtimepath = &runtimepath. ','. s:dein_repo_dir
 
-let s:toml_file = $XDG_CONFIG_HOME. '/nvim/dein.toml'
-let s:lazy_toml_file = $XDG_CONFIG_HOME. '/nvim/dein_lazy.toml'
+let s:dein_toml = $XDG_CONFIG_HOME. '/nvim/dein.toml'
+let s:dein_lazy_toml = $XDG_CONFIG_HOME. '/nvim/dein_lazy.toml'
+let s:dein_ddc_toml = $XDG_CONFIG_HOME. '/nvim/ddc.toml'
 
-if dein#load_state(s:dein_dir)
-  call dein#begin(s:dein_dir, [$MYVIMRC, s:toml_file, s:lazy_toml_file])
-  call dein#load_toml(s:toml_file, {'lazy': 0})
-  call dein#load_toml(s:lazy_toml_file, {'lazy': 1})
+let s:path = $XDG_CACHE_HOME . '/dein'
+if dein#min#load_state(s:path)
+  call dein#begin(s:path, [
+        \ expand('<sfile>'), s:dein_toml, s:dein_lazy_toml
+        \ ])
+  call dein#load_toml(s:dein_toml, {'lazy': 0})
+  call dein#load_toml(s:dein_lazy_toml, {'lazy': 1})
+  call dein#load_toml(s:dein_ddc_toml, {'lazy': 1})
   call dein#end()
   call dein#save_state()
 endif

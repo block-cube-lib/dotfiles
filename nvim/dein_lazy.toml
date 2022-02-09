@@ -1,45 +1,136 @@
-# language server
+###
+# Denite
+###
+
 [[plugins]]
-repo = 'autozimu/LanguageClient-neovim'
-rev = 'next'
-on_ft = ['rust', 'python']
-hook_post_update = '''
-  let g:dein#plugin.build = './install.sh'
+repo = 'Shougo/denite.nvim'
+hook_add = '''
+  nnoremap [Denite] <Nop>
+  nmap <Space>d [Denite]
+  nnoremap <silent> [Denite]b :<C-u>Denite buffer<CR>
+  nnoremap <silent> [Denite]d :<C-u>Denite directory_rec<CR>
+  nnoremap <silent> [Denite]f :<C-u>Denite file/rec<CR>
+  nnoremap <silent> [Denite]h :<C-u>Denite help<CR>
+  nnoremap <silent> [Denite]l :<C-u>Denite line<CR>
+  nnoremap <silent> [Denite]c :<C-u>Denite colorscheme<CR>
+
+  autocmd FileType denite call s:denite_my_settings()
+  function! s:denite_my_settings() abort
+    nnoremap <silent><buffer><expr> <CR>
+          \ denite#do_map('do_action')
+    nnoremap <silent><buffer><expr> d
+          \ denite#do_map('do_action', 'delete')
+    nnoremap <silent><buffer><expr> p
+          \ denite#do_map('do_action', 'preview')
+    nnoremap <silent><buffer><expr> q
+          \ denite#do_map('quit')
+    nnoremap <silent><buffer><expr> i
+          \ denite#do_map('open_filter_buffer')
+    nnoremap <silent><buffer><expr> <Space>
+          \ denite#do_map('toggle_select').'j'
+  endfunction<Paste>
 '''
 hook_source = '''
-  let g:LanguageClient_serverCommands = {}
-  if executable('rust-analyzer') && $RUST_SRC_PATH != ""
-    let g:LanguageClient_serverCommands['rust'] = ['rust-analyzer']
-  elseif executable('rls')
-    let g:LanguageClient_serverCommands['rust'] = ['rustup', 'run', 'stable', 'rls']
-  endif
-  if executable('pyls')
-    let g:LanguageClient_serverCommands['python'] = ['pyls']
-  endif
+  call denite#custom#map('_', "\<C-n>", 'move_to_next_line')
+  call denite#custom#map('_', "\<C-p>", 'move_to_prev_line')
 
-  nnoremap <silent> K :call LanguageClient#textDocument_hover()<CR>
-  nnoremap <silent> gd :call LanguageClient#textDocument_definition()<CR>
-  nnoremap <silent> <F2> :call LanguageClient#textDocument_rename()<CR>
-
-  let g:LanguageClient_autoStart = 1
-  " set completefunc=LanguageClient#complete
 '''
 
 [[plugins]]
-repo = 'Shougo/echodoc.vim'
-depends = ['LanguageClient-neovim']
-
-###
-# LSP symbol viewer
-###
-[[plugins]]
-repo = 'liuchengxu/vista.vim'
-depends = ['LanguageClient-neovim']
+repo = 'Shougo/neomru.vim'
 hook_add = '''
-  nnoremap [Vista] <Nop>
-  nmap <Space>v [Vista]
-  nnoremap <silent> [Vista] :<C-u>Vista!!<CR>
+  nnoremap <silent> [Denite]m :<C-u>Denite file_mru<CR>
 '''
+
+[[plugins]]
+repo = 'Shougo/neoyank.vim'
+hook_add = '''
+  nnoremap <silent> [Denite]y :<C-u>Denite neoyank<CR>
+'''
+
+###
+# filer
+###
+[[plugins]]
+repo = "Shougo/defx.nvim"
+hook_add = '''
+  nnoremap [defx] <Nop>
+  nmap <Space>F [defx]
+  nnoremap <silent> [defx] :<C-u>Defx<CR>
+  autocmd FileType defx call s:defx_my_settings()
+  function! s:defx_my_settings() abort
+    nnoremap <silent><buffer><expr> <CR>
+          \ defx#do_action('open')
+    nnoremap <silent><buffer><expr> K
+          \ defx#do_action('new_directory')
+    nnoremap <silent><buffer><expr> N
+          \ defx#do_action('new_file')
+    nnoremap <silent><buffer><expr> d
+          \ defx#do_action('remove')
+    nnoremap <silent><buffer><expr> r
+          \ defx#do_action('rename')
+    nnoremap <silent><buffer><expr> h
+          \ defx#do_action('cd', ['..'])
+    nnoremap <silent><buffer><expr> ~
+          \ defx#do_action('cd')
+    nnoremap <silent><buffer><expr> <Space>
+          \ defx#do_action('toggle_select') . 'j'
+    nnoremap <silent><buffer><expr> j
+          \ line('.') == line('$') ? 'gg' : 'j'
+    nnoremap <silent><buffer><expr> k
+          \ line('.') == 1 ? 'G' : 'k'
+    nnoremap <silent><buffer><expr> <C-l>
+          \ defx#do_action('redraw')
+  endfunction
+'''
+
+[[plugins]]
+repo = 'Shougo/context_filetype.vim'
+hook_source = '''
+let g:context_filetype#ignore_patterns = {
+    \ 'toml': ['^\s*#\s*'],
+    \ }
+'''
+
+[[plugins]]
+repo = 'Shougo/deoppet.nvim'
+depends = ['neosnippet-snippets', 'context_filetype.vim']
+on_event = 'InsertEnter'
+on_source = 'ddc.vim'
+if = 'has("nvim")'
+hook_source = '''
+  call deoppet#initialize()
+  call deoppet#custom#option('snippets',
+  \ map(globpath(&runtimepath, 'neosnippets', 1, 1),
+  \     { _, val -> { 'path': val } }))
+
+  imap <C-k>  <Plug>(deoppet_expand)
+  imap <C-f>  <Plug>(deoppet_jump_forward)
+  imap <C-b>  <Plug>(deoppet_jump_backward)
+  smap <C-f>  <Plug>(deoppet_jump_forward)
+  smap <C-b>  <Plug>(deoppet_jump_backward)
+
+  " Use deoppet source.
+  call ddc#custom#patch_global('sources', ['deoppet'])
+
+  " Change source options
+  call ddc#custom#patch_global('sourceOptions', {
+        \ 'deoppet': {'dup': v:true, 'mark': 'dp'},
+        \ })
+'''
+
+[[plugins]]
+repo = 'Shougo/neosnippet-snippets'
+
+[[plugins]]
+repo = 'hrsh7th/vim-vsnip'
+
+[[plugins]]
+repo = 'hrsh7th/vim-vsnip-integ'
+
+[[plugins]]
+repo = 'osyo-manga/vim-precious'
+depends = ['context_filetype.vim']
 
 # markdown
 [[plugins]]
@@ -66,59 +157,10 @@ on_ft = ['plantuml']
 repo = 'dag/vim-fish'
 on_ft = ['fish']
 
-# vim
-repo = 'Shougo/neco-vim'
-on_ft = ['vim']
-depends = ['deoplete.nvim']
-
-# c++
-[[plugins]]
-repo = 'vim-jp/cpp-vim'
-on_ft = ['cpp']
-
-[[plugins]]
-repo = 'zchee/deoplete-clang'
-on_ft = ['c', 'cpp', 'cmake']
-if = '''filereadable($LIBCLANG_PATH) && isdirectory($CLANG_HEADER_PATH)'''
-depends = ['deoplete.nvim']
-hook_source = '''
-  let g:deoplete#sources#clang#libclang_path = $LIBCLANG_PATH
-  let g:deoplete#sources#clang#clang_header = $CLANG_HEADER_PATH
-'''
-
 # swift
 [[plugins]]
 repo = 'keith/swift.vim'
 on_ft = ['swift']
-
-[[plugins]]
-repo = 'landaire/deoplete-swift'
-on_ft = ['swift']
-if = '''has('mac') && executable('sourcekitten')'''
-depends = ['deoplete.nvim']
-hook_source = '''
-  let g:deoplete#sources#swift#daemon_autostart = 1
-'''
-
-# c# completion
-[[plugins]]
-repo = 'OmniSharp/omnisharp-vim'
-on_ft = ['cs']
-if = '''(dein#util#_is_windows()) && executable("MSBuild") || executable("xbuild")'''
-hook_post_update = '''
-  if dein#util#_is_windows()
-    let cmd = 'MSBuild.exe server/OmniSharp.sln /p:Platform="Any CPU"'
-  else
-    let cmd = 'xbuild server/OmniSharp.sln'
-  endif
-  let g:dein#plugin.build = cmd
-'''
-
-# c#
-[[plugins]]
-repo = 'Robzz/deoplete-omnisharp'
-on_ft = ['cs']
-depends = ['omnisharp-vim', 'deoplete.nvim']
 
 # rust
 [[plugins]]
@@ -131,11 +173,4 @@ if executable("rustfmt")
   nnoremap [RustFmt] <Nop>
   nmap <Space>f [RustFmt]
   nnoremap <silent> [RustFmt] :<C-u>RustFmt<CR>
-endif
 '''
-
-# fish
-[[plugins]]
-repo = 'dag/vim-fish'
-on_ft = ['fish']
-depends = ['deoplete.nvim']
