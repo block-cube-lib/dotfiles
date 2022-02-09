@@ -52,15 +52,3 @@ setup_z
 
 setup_rust
 setup_starship
-
-# setup pyenv
-type -q pyenv
-if test $status -eq 0
- source (pyenv init - | psub)
-end
-
-# setup rbenv
-type -q rbenv
-if test $status -eq 0
-  source (rbenv init - | psub)
-end
