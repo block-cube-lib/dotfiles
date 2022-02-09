@@ -3,3 +3,6 @@ disabled = true
 
 [gcloud]
 disabled = true
+
+[nodejs]
+symbol = "Node.js "
