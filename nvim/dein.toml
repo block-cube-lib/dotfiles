@@ -116,10 +116,14 @@ repo = 'itchyny/vim-gitbranch'
 ###
 [[plugins]]
 repo = 'cocopon/iceberg.vim'
+
+[[plugins]]
+repo = 'folke/tokyonight.nvim'
 hook_add = '''
   augroup set_colorscheme
     autocmd!
+    let g:tokyonight_style="night"
     autocmd VimEnter * nested syntax on
-    autocmd VimEnter * nested colorscheme iceberg
+    autocmd VimEnter * nested colorscheme tokyonight
   augroup END
 '''

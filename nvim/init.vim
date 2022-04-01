@@ -126,7 +126,7 @@ set iminsert=0
 set imsearch=0
 
 if !exists('g:vscode')
-  set ambiwidth=double
+  set ambiwidth=single
 endif
 
 set nowrap            " scroll
