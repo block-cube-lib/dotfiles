@@ -1,17 +1,3 @@
-function add_path_if_need
-  set result (false)
-  for v in $argv
-    contains $v $PATH -- or (contains $v $fish_user_paths)
-    if test $status -ne 0
-      echo "Add $v to $fish_user_paths"
-      set -U fish_user_paths $v $fish_user_paths
-      set result (true)
-    end
-  end
-
-  return $result
-end
-
 function setup_fisher
   type -q fisher
   if test $status -ne 0
@@ -34,7 +20,7 @@ function setup_rust
     echo "install rust"
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
   end
-  add_path_if_need $HOME/.cargo/bin
+  fish_add_path $HOME/.cargo/bin
 end
 
 function setup_starship
