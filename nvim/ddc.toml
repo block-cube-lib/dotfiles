@@ -1,8 +1,10 @@
 [[plugins]]
 repo = 'Shougo/ddc.vim'
-depends = ['context_filetype.vim', 'denops.vim', 'pum.vim']
+depends = ['context_filetype.vim', 'denops.vim', 'pum.vim', 'ddc-ui-native']
 on_event = 'InsertEnter'
 hook_source = '''
+  call ddc#custom#patch_global('ui', 'native')
+
   inoremap <silent><expr> <C-l> ddc#complete_common_string()
 
   call ddc#custom#patch_global(
@@ -60,7 +62,7 @@ hook_source = '''
   inoremap <silent><expr> <TAB>
         \ pum#visible() ? '<Cmd>call pum#map#insert_relative(+1)<CR>' :
         \ (col('.') <= 1 <Bar><Bar> getline('.')[col('.') - 2] =~# '\s') ?
-        \ '<TAB>' : ddc#manual_complete()
+        \ '<TAB>' : ddc#map#manual_complete()
   inoremap <S-Tab> <Cmd>call pum#map#insert_relative(-1)<CR>
   inoremap <C-n>   <Cmd>call pum#map#select_relative(+1)<CR>
   inoremap <C-p>   <Cmd>call pum#map#select_relative(-1)<CR>
@@ -77,7 +79,7 @@ hook_add = '''
     " Note: It disables default command line completion!
     cnoremap <expr> <Tab>
     \ pum#visible() ? '<Cmd>call pum#map#insert_relative(+1)<CR>' :
-    \ ddc#manual_complete()
+    \ ddc#map#manual_complete()
     cnoremap <S-Tab> <Cmd>call pum#map#insert_relative(-1)<CR>
     set wildchar=<C-t>
     " Overwrite sources
@@ -112,7 +114,10 @@ hook_add = '''
 repo = 'Shougo/pum.vim'
 
 [[plugins]]
-repo = 'Shougo/ddc-around'
+repo = 'Shougo/ddc-ui-native'
+
+[[plugins]]
+repo = 'Shougo/ddc-source-around'
 on_source = 'ddc.vim'
 
 [[plugins]]
@@ -181,12 +186,16 @@ nvim_lsp.rust_analyzer.setup({
   on_attach=on_attach,
   settings = {
     ["rust-analyzer"] = {
-      assist = {
-        importGranularity = "module",
-        importPrefix = "by_self",
+      imports = {
+        granularity = {
+          group = "module",
+        },
+        prefix = "self",
       },
       cargo = {
-        loadOutDirsFromCheck = true
+        buildScripts = {
+          enable = true,
+        },
       },
       procMacro = {
         enable = true

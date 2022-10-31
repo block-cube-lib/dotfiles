@@ -178,3 +178,4 @@ if !exists('g:vscode')
     source $XDG_CONFIG_HOME/nvim/dein.vim
   endif
 endif
+
