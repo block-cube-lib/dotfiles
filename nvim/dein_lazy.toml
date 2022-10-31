@@ -111,14 +111,6 @@ hook_source = '''
   imap <C-b>  <Plug>(deoppet_jump_backward)
   smap <C-f>  <Plug>(deoppet_jump_forward)
   smap <C-b>  <Plug>(deoppet_jump_backward)
-
-  " Use deoppet source.
-  call ddc#custom#patch_global('sources', ['deoppet'])
-
-  " Change source options
-  call ddc#custom#patch_global('sourceOptions', {
-        \ 'deoppet': {'dup': v:true, 'mark': 'dp'},
-        \ })
 '''
 
 [[plugins]]

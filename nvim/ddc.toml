@@ -1,6 +1,6 @@
 [[plugins]]
 repo = 'Shougo/ddc.vim'
-depends = ['context_filetype.vim', 'denops.vim', 'pum.vim', 'ddc-ui-native']
+depends = ['context_filetype.vim', 'denops.vim', 'pum.vim', 'ddc-ui-native', 'deoppet.nvim']
 on_event = 'InsertEnter'
 hook_source = '''
   call ddc#custom#patch_global('ui', 'native')
