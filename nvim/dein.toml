@@ -8,6 +8,185 @@ repo = 'vim-denops/denops.vim'
 repo = 'nvim-lua/completion-nvim'
 
 ###
+# ddu
+###
+repo = 'Shougo/ddu.vim'
+depends = [
+  'denops.vim',
+  'ddu-column-filename',
+  'ddu-commands.vim',
+  'ddu-filter-matcher_substring',
+  'ddu-filter-sorter_alpha',
+  'ddu-kind-file',
+  'ddu-kind-word',
+  'ddu-source-buffer',
+  'ddu-source-file',
+  'ddu-source-file_rec',
+  'ddu-source-line'
+  'ddu-source-mr',
+  'ddu-source-register',
+  'ddu-ui-ff'
+  'ddu-ui-filer',
+  'mr.vim',
+]
+hook_add='''
+  nnoremap <SID>[Ddu] <Nop>
+  nmap <Space>d <SID>[Ddu]
+  nnoremap <silent> <SID>[Ddu]F :<C-u>Ddu filer<CR>
+  nnoremap <silent> <SID>[Ddu]b :<C-u>Ddu buffer<CR>
+  nnoremap <silent> <SID>[Ddu]f :<C-u>Ddu file<CR>
+  nnoremap <silent> <SID>[Ddu]l :<C-u>Ddu line<CR>
+  nnoremap <silent> <SID>[Ddu]m :<C-u>Ddu mr<CR>
+  nnoremap <silent> <SID>[Ddu]r :<C-u>Ddu register<CR>
+'''
+hook_source='''
+  let float_width = 0.85
+  let float_height = 0.7
+  call ddu#custom#patch_global({
+      \   'ui': 'ff',
+      \   'uiParams': {
+      \       'ff': {
+      \           'split': 'floating',
+      \           'startFilter': v:true,
+      \           'prompt': '> ',
+      \           'winWidth': float2nr(&columns * float_width),
+      \           'winCol': float2nr((&columns - (&columns * float_width)) / 2),
+      \           'winHeight': float2nr(&lines * float_height),
+      \           'winRow': float2nr((&lines - (&lines * float_height)) / 2),
+      \       },
+      \       'filer': {
+      \           'split':'floating',
+      \           'winWidth': float2nr(&columns * float_width),
+      \           'winCol': float2nr((&columns - (&columns * float_width)) / 2),
+      \           'winHeight': float2nr(&lines * float_height),
+      \           'winRow': float2nr((&lines - (&lines * float_height)) / 2),
+      \       },
+      \   },
+      \   'sources': [
+      \       {'name':'buffer'},
+      \       {'name':'file'},
+      \       {'name':'line'},
+      \       {'name':'mr'},
+      \       {'name':'register'},
+      \   ],
+      \   'sourceOptions': {
+      \     '_': {
+      \       'matchers': ['matcher_substring'],
+      \       'ignoreCase': v:true,
+      \       'sorters': ['sorter_alpha'],
+      \     },
+      \   },
+      \   'filterParams': {
+      \     'matcher_substring': {
+      \       'highlightMatched': 'Search',
+      \     },
+      \   },
+      \   'kindOptions': {
+      \     'file': {
+      \       'defaultAction': 'open',
+      \     },
+      \     'word': {
+      \       'defaultAction': 'append',
+      \     },
+      \   },
+      \ })
+
+  call ddu#custom#patch_local('file_rec', {
+      \   'sources': [{
+      \     'name':'file_rec',
+      \     'param': {
+      \       'ignoredDirectories': ['.git', 'var', 'node_modules', ]
+      \     },
+      \   }],
+      \})
+
+  call ddu#custom#patch_local('filer', {
+      \   'ui': 'filer',
+      \   'sources': [
+      \       {'name':'file', 'params': {}}
+      \   ],
+      \   'sourceOptions': {
+      \     '_': {
+      \       'columns': ['filename'],
+      \     },
+      \   },
+      \   'columns': ['filename'],
+      \   'kindOptions': {
+      \     'file': {
+      \       'defaultAction': 'open',
+      \     },
+      \   },
+      \   'actionOptions': {
+      \     'narrow': {
+      \       'quit': v:true,
+      \     },
+      \   },
+      \ })
+
+
+  "ddu-key-setting
+  autocmd FileType ddu-ff call s:ddu_my_settings()
+  function! s:ddu_my_settings() abort
+    nnoremap <buffer><silent> <CR> <Cmd>call ddu#ui#ff#do_action('itemAction')<CR>
+    nnoremap <buffer><silent> i <Cmd>call ddu#ui#ff#do_action('openFilterWindow')<CR>
+    nnoremap <buffer><silent> q <Cmd>call ddu#ui#ff#do_action('quit')<CR>
+  endfunction
+
+  autocmd FileType ddu-ff-filter call s:ddu_filter_my_settings()
+  function! s:ddu_filter_my_settings() abort
+    nnoremap <buffer><silent> <CR> :q<CR>
+    nnoremap <buffer><silent> <ESC> :q<CR>
+    nnoremap <buffer><silent> q :q<CR>
+  endfunction
+'''
+
+[[plugins]]
+repo = 'Shougo/ddu-ui-ff'
+
+[[plugins]]
+repo = 'Shougo/ddu-ui-filer'
+
+[[plugins]]
+repo = 'Shougo/ddu-source-file'
+
+[[plugins]]
+repo = 'Shougo/ddu-source-file_rec'
+
+[[plugins]]
+repo = 'shun/ddu-source-buffer'
+
+[[plugins]]
+repo = 'Shougo/ddu-source-line'
+
+[[plugins]]
+repo = 'Shougo/ddu-source-register'
+
+[[plugins]]
+repo = 'Shougo/ddu-filter-sorter_alpha'
+
+[[plugins]]
+repo = 'Shougo/ddu-filter-matcher_substring'
+
+[[plugins]]
+repo = 'kuuote/ddu-source-mr'
+
+[[plugins]]
+repo = 'lambdalisue/mr.vim'
+
+[[plugins]]
+repo = 'Shougo/ddu-kind-file'
+
+[[plugins]]
+repo = 'Shougo/ddu-kind-word'
+
+[[plugins]]
+repo = 'Shougo/ddu-column-filename'
+
+[[plugins]]
+repo = 'Shougo/ddu-commands.vim'
+
+
+###
 # utility
 ###
 [[plugins]]
