@@ -1,6 +1,6 @@
 [[plugins]]
 repo = 'Shougo/context_filetype.vim'
-hook_source = '''
+hook_add = '''
 let g:context_filetype#ignore_patterns = {
     \ 'toml': ['^\s*#\s*'],
     \ }
@@ -9,8 +9,6 @@ let g:context_filetype#ignore_patterns = {
 [[plugins]]
 repo = 'Shougo/deoppet.nvim'
 depends = ['neosnippet-snippets', 'context_filetype.vim']
-on_event = 'InsertEnter'
-on_source = 'ddc.vim'
 if = 'has("nvim")'
 hook_source = '''
   call deoppet#initialize()
@@ -27,16 +25,12 @@ hook_source = '''
 
 [[plugins]]
 repo = 'Shougo/neosnippet-snippets'
-
-[[plugins]]
-repo = 'hrsh7th/vim-vsnip'
-
-[[plugins]]
-repo = 'hrsh7th/vim-vsnip-integ'
+if = 'has("nvim")'
 
 [[plugins]]
 repo = 'osyo-manga/vim-precious'
 depends = ['context_filetype.vim']
+on_ft = ['vim', 'toml', 'rust', 'markdown']
 
 # markdown
 [[plugins]]
@@ -80,3 +74,8 @@ if executable("rustfmt")
   nmap <Space>f [RustFmt]
   nnoremap <silent> [RustFmt] :<C-u>RustFmt<CR>
 '''
+
+# ron
+[[plugins]]
+repo = 'ron-rs/ron.vim'
+on_ft = ['ron']

@@ -34,13 +34,12 @@ hook_add='''
   nmap <Space>d <SID>[Ddu]
   nnoremap <silent> <SID>[Ddu]F :<C-u>Ddu filer<CR>
   nnoremap <silent> <SID>[Ddu]b :<C-u>Ddu buffer<CR>
-  nnoremap <silent> <SID>[Ddu]f :<C-u>Ddu file<CR>
+  nnoremap <silent> <SID>[Ddu]f :<C-u>Ddu file_rec<CR>
   nnoremap <silent> <SID>[Ddu]l :<C-u>Ddu line<CR>
   nnoremap <silent> <SID>[Ddu]m :<C-u>Ddu mr<CR>
   nnoremap <silent> <SID>[Ddu]r :<C-u>Ddu register<CR>
 '''
-hook_source='''
-  let float_width = 0.85
+hook_source=''' let float_width = 0.85
   let float_height = 0.7
   call ddu#custom#patch_global({
       \   'ui': 'ff',

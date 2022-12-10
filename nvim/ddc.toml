@@ -1,16 +1,16 @@
 [[plugins]]
 repo = 'Shougo/ddc.vim'
-depends = ['context_filetype.vim', 'denops.vim', 'pum.vim', 'ddc-ui-native', 'deoppet.nvim']
+depends = ['context_filetype.vim', 'denops.vim', 'pum.vim', 'ddc-ui-native', 'ddc-ui-pum', 'deoppet.nvim']
 on_event = 'InsertEnter'
 hook_source = '''
   call ddc#custom#patch_global('ui', 'native')
 
   inoremap <silent><expr> <C-l> ddc#complete_common_string()
 
-  call ddc#custom#patch_global(
-      \ 'sources', has('nvim') ?
-      \ ['around', 'deoppet', 'file'] :
-      \ ['around', 'file'],
+  call ddc#custom#patch_global('sources',
+      \ has('nvim') ?
+      \   ['around', 'deoppet', 'file'] :
+      \   ['around', 'file'],
       \ )
   call ddc#custom#patch_global('sourceOptions', {
     \ '_': {
@@ -58,7 +58,7 @@ hook_source = '''
       \ 'InsertEnter', 'TextChangedI', 'TextChangedP',
       \ 'CmdlineEnter', 'CmdlineChanged',
       \ ])
-  call ddc#custom#patch_global('completionMenu', 'pum.vim')
+  call ddc#custom#patch_global('completionMenu', 'pum')
   inoremap <silent><expr> <TAB>
         \ pum#visible() ? '<Cmd>call pum#map#insert_relative(+1)<CR>' :
         \ (col('.') <= 1 <Bar><Bar> getline('.')[col('.') - 2] =~# '\s') ?
@@ -68,12 +68,10 @@ hook_source = '''
   inoremap <C-p>   <Cmd>call pum#map#select_relative(-1)<CR>
   inoremap <C-y>   <Cmd>call pum#map#confirm()<CR>
   inoremap <C-e>   <Cmd>call pum#map#cancel()<CR>
-  inoremap <silent><expr> <C-l>   ddc#map#extend()
+  inoremap <silent><expr> <C-l>   <Cmd>ddc#map#extend()<CR>
   call ddc#enable()
-'''
-hook_add = '''
+
   nnoremap :       <Cmd>call CommandlinePre(':')<CR>:
-  nnoremap ?       <Cmd>call CommandlinePre('/')<CR>?
   function! CommandlinePre(mode) abort
     call dein#source('ddc.vim')
     " Note: It disables default command line completion!
@@ -115,6 +113,9 @@ repo = 'Shougo/pum.vim'
 
 [[plugins]]
 repo = 'Shougo/ddc-ui-native'
+
+[[plugins]]
+repo = 'Shougo/ddc-ui-pum'
 
 [[plugins]]
 repo = 'Shougo/ddc-source-around'
@@ -164,7 +165,7 @@ on_source = 'nvim-lspconfig'
 repo = 'neovim/nvim-lspconfig'
 on_event = 'BufEnter'
 on_ft = ['rust', 'go']
-if = 'has("nvim")'
+if = 'has("nvim") && expand("%:e") != "md"'
 depends = 'ddc.vim'
 hook_source = '''
 lua << EOF
