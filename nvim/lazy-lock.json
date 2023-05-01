@@ -1,0 +1,15 @@
+{
+  "ddc-matcher_head": { "branch": "main", "commit": "fd27c8881e677048218441eeb0566c334548426d" },
+  "ddc-sorter_rank": { "branch": "main", "commit": "db14b0450e27f9117e6983879ce5c81efe26d89f" },
+  "ddc-source-around": { "branch": "main", "commit": "e9ea00419c2fa51746316d0cc5b392f05991e0bd" },
+  "ddc-source-nvim-lsp": { "branch": "main", "commit": "1795bfdbf0879054f3ca9f5ab7025ba68e0338c4" },
+  "ddc-ui-native": { "branch": "main", "commit": "5ff6a1b887c26b3ad9d5085941e6472716703a5e" },
+  "ddc.vim": { "branch": "main", "commit": "81026a0a0874daf20e0827377e12e4aa1ab87467" },
+  "denops-translate.vim": { "branch": "main", "commit": "d274680174134dedad2360ad2b045b4f96cd8237" },
+  "denops.vim": { "branch": "main", "commit": "d7a15615f86830e9464c30f761a3911f619b38b3" },
+  "dial.nvim": { "branch": "master", "commit": "747d6fd009dbc1904627868125e16cfa7c524b0d" },
+  "editorconfig.nvim": { "branch": "master", "commit": "5b9e303e1d6f7abfe616ce4cc8d3fffc554790bf" },
+  "lazy.nvim": { "branch": "main", "commit": "903f0fe542fc35b74f3c09494f9c175346dfa76d" },
+  "nvim-lspconfig": { "branch": "master", "commit": "427378a03ffc1e1bc023275583a49b1993e524d0" },
+  "tokyonight.nvim": { "branch": "main", "commit": "ab0ac67f4f32f44c3480f4b81ed90e11cb4f3763" }
+}
