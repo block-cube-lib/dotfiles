@@ -8,8 +8,95 @@ return {
 		end,
 	},
 	{
-		"gpanders/editorconfig.nvim",
+		"lukas-reineke/indent-blankline.nvim",
 		lazy = false,
+		config = function()
+			show_end_of_line = true
+		end
+	},
+	{
+		"nvim-treesitter/nvim-treesitter",
+		lazy = false,
+		config = {
+			sync_install = false,
+			auto_install = true,
+			highlight = {
+				enable = true,
+				-- Or use a function for more flexibility, e.g. to disable slow treesitter highlight for large files
+				disable = function(lang, buf)
+					local max_filesize = 100 * 1024 -- 100 KB
+					local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
+					if ok and stats and stats.size > max_filesize then
+						return true
+					end
+				end,
+				additional_vim_regex_highlighting = false,
+			},
+		},
+	},
+	{
+		"nvim-treesitter/nvim-treesitter-context",
+		lazy = false,
+		dependencies = { "nvim-treesitter/nvim-treesitter", },
+	},
+	{
+		'nvim-treesitter/playground',
+		lazy = false,
+		dependencies = { 'nvim-treesitter/nvim-treesitter' },
+	},
+	{
+		"nvim-tree/nvim-web-devicons",
+		lazy = true,
+	},
+	{
+		"arkav/lualine-lsp-progress",
+		lazy = true,
+	},
+	{
+		"nvim-lualine/lualine.nvim",
+		lazy = false,
+		dependencies = {
+			"nvim-tree/nvim-web-devicons",
+			"arkav/lualine-lsp-progress",
+		},
+		config = {
+			icons_enabled = true,
+			theme = 'auto',
+			component_separators = { left = '', right = ''},
+			section_separators = { left = '', right = ''},
+			disabled_filetypes = {
+				statusline = {},
+				winbar = {},
+			},
+			ignore_focus = {},
+			always_divide_middle = true,
+			globalstatus = false,
+			refresh = {
+				statusline = 1000,
+				tabline = 1000,
+				winbar = 1000,
+			}
+		},
+		sections = {
+			lualine_a = {'mode'},
+			lualine_b = {'branch', 'diff', 'diagnostics'},
+			lualine_c = {'filename', 'lsp_progress'},
+			lualine_x = {'encoding', 'fileformat', 'filetype'},
+			lualine_y = {'progress'},
+			lualine_z = {'location'}
+		},
+		inactive_sections = {
+			lualine_a = {},
+			lualine_b = {},
+			lualine_c = {'filename'},
+			lualine_x = {'location'},
+			lualine_y = {},
+			lualine_z = {}
+		},
+		tabline = {},
+		winbar = {},
+		inactive_winbar = {},
+		extensions = {}
 	},
 	{
 		"vim-denops/denops.vim",
@@ -18,9 +105,7 @@ return {
 	{
 		"skanehira/denops-translate.vim",
 		lazy = false,
-		dependencies = {
-			"vim-denops/denops.vim",
-		},
+		dependencies = { "vim-denops/denops.vim", },
 	},
 	{
 		"monaqa/dial.nvim",
@@ -70,7 +155,7 @@ return {
 
 			-- Global mappings.
 			-- See `:help vim.diagnostic.*` for documentation on any of the below functions
-			vim.keymap.set('n', '<space>e', vim.diagnostic.open_float)
+			vim.keymap.set('n', 'ge', vim.diagnostic.open_float)
 			vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
 			vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
 			vim.keymap.set('n', '<space>q', vim.diagnostic.setloclist)
@@ -134,13 +219,10 @@ return {
 			})
 			vim.fn["ddc#custom#patch_global"]('sourceOptions', {
 				around = { mark = '[around]' },
-			})
-			vim.fn["ddc#custom#patch_global"]('sourceOptions', {
 				["nvim-lsp"] = {
 					mark = '[LSP]',
 					forceCompletionPattern = {[['\.\w*|:\w*|->\w*']]},
-					minAutoCompleteLength = 1,
-					backspaceCompletion = true,
+					minAutoCompleteLength = 0,
 				},
 			})
 			vim.fn["ddc#custom#patch_global"]('sourceParams', {
@@ -151,6 +233,140 @@ return {
 				around = { maxSize = 100 }
 			})
 			vim.fn["ddc#enable"]()
+		end,
+	},
+	{ "Shougo/ddu-ui-ff", lazy = true, },
+	{ "Shougo/ddu-ui-filer", lazy = true, },
+	{ "Shougo/ddu-kind-file", lazy = true, },
+	{ "Shougo/ddu-source-file_rec", lazy = true, },
+	{ "Shougo/ddu-filter-matcher_substring", lazy = true, },
+	{
+		"Shougo/ddu-source-file",
+		lazy = true,
+		dependencies = {
+			"Shougo/ddu-kind-file",
+		}
+	},
+	{ "Shougo/ddu-source-buffer", lazy = true, },
+	{ "Shougo/ddu-column-filename", lazy = true, },
+	{
+		"Shougo/ddu.vim",
+		lazy = false,
+		dependencies = {
+			"vim-denops/denops.vim",
+			"Shougo/ddu.vim",
+			"Shougo/ddu-ui-ff",
+			"Shougo/ddu-ui-filer",
+			"Shougo/ddu-kind-file",
+			"Shougo/ddu-filter-matcher_substring",
+			"Shougo/ddu-source-file",
+			"Shougo/ddu-source-file_rec",
+			"Shougo/ddu-source-buffer",
+			"Shougo/ddu-column-filename",
+		},
+		config = function()
+			vim.fn["ddu#custom#patch_global"]({
+				ui = 'ff',
+				sources = {
+					{ name = 'file' },
+				},
+				uiParams = {
+					ff = {
+						split = 'floating',
+						prompt = '> ',
+					},
+				},
+				kindOptions = {
+					file = { defaultAction = 'open' },
+				},
+				sourceOptions = {
+					_ = {
+						matchers = { 'matcher_substring' },
+					}
+				},
+			})
+			vim.fn["ddu#custom#patch_local"]('filer', {
+				ui = 'filer',
+				sources = {
+					{ name = 'file' },
+				},
+				uiParams = {
+					filer = {
+						winWidth = 40,
+						split = 'vertical',
+						splitDirection = 'topleft',
+					}
+				},
+				kindOptions = {
+					file = { defaultAction = 'open', }
+				},
+				sourceOptions = {
+					_ = {
+						columns = { 'filename' },
+					},
+				},
+				actionOptions = {
+					narrow = { quit = false }
+				},
+			})
+
+			vim.api.nvim_create_autocmd('FileType', {
+				pattern = { 'ddu-ff' },
+				callback = function(ev)
+					-- (ddu#ui#get_item()['__sourceName'] == 'buffer') ? 
+					local opt = { noremap = true, silent = true, buffer = ev.buf }
+					vim.keymap.set('n', '<CR>', [[<Cmd>call ddu#ui#do_action('itemAction')<CR>]], { noremap = true, silent = true })
+					vim.keymap.set('n', 'S', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'open', 'params': {'command': 'split'}})<CR>]], opt)
+					vim.keymap.set('n', 'V', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'open', 'params': {'command': 'vsplit'}})<CR>]], opt)
+					vim.keymap.set('n', 'T', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'open', 'params': {'command': 'tabedit'}})<CR>]], opt)
+					vim.keymap.set('n', '<Esc>', [[<Cmd>call ddu#ui#do_action('quit')<CR>]], opt)
+					vim.keymap.set('n', 'p', [[<Cmd>call ddu#ui#do_action('preview')<CR>]], opt)
+					vim.keymap.set('n', 'd', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'delete'})<CR>]], opt)
+					vim.keymap.set('n', '<C-l>', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'refresh'})<CR>]], opt)
+					vim.keymap.set('n', 'i', [[<Cmd>call ddu#ui#do_action('openFilterWindow')<CR>]], opt)
+				end,
+			})
+			vim.api.nvim_create_autocmd('FileType', {
+				pattern = { 'ddu-ff-filter' },
+				callback = function(ev)
+					local opt = { noremap = true, silent = true, buffer = ev.buf }
+					vim.keymap.set('i', '<CR>', [[<Esc><Cmd>call ddu#ui#do_action('closeFilterWindow')<CR>]], opt)
+					vim.keymap.set('i', '<Esc>', [[<Esc><Cmd>call ddu#ui#do_action('closeFilterWindow')<CR>]], opt)
+					vim.keymap.set('n', '<CR>', [[<Esc><Cmd>call ddu#ui#do_action('closeFilterWindow')<CR>]], opt)
+					vim.keymap.set('n', '<Esc>', [[<Esc><Cmd>call ddu#ui#do_action('closeFilterWindow')<CR>]], opt)
+					vim.keymap.set('n', 'o', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'open'})<CR>]], opt)
+				end,
+			})
+
+			vim.api.nvim_create_autocmd({'TabEnter', 'CursorHold', 'FocusGained'}, {
+				command = "call ddu#ui#filer#do_action('checkItems')"
+			})
+			vim.api.nvim_create_autocmd('FileType', {
+				pattern = { 'ddu-filer' },
+				callback = function(ev)
+					local opt = { noremap = true, silent = true, buffer = ev.buf }
+					vim.keymap.set('n', '<CR>', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'open'})<CR>]], opt)
+					vim.keymap.set('n', 'o', [[<Cmd>call ddu#ui#filer#do_action('expandItem', {'mode': 'toggle'})<CR>]], opt)
+					vim.keymap.set('n', '<Space>', [[<Cmd>call ddu#ui#filer#do_action('expandItem', {'mode': 'toggle'})<CR>]], opt)
+					vim.keymap.set('n', '<Esc>', [[<Cmd>call ddu#ui#filer#do_action('quit')<CR>]], opt)
+					vim.keymap.set('n', 'c', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'copy'})<CR>]], opt)
+					vim.keymap.set('n', 'p', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'paste'})<CR>]], opt)
+					vim.keymap.set('n', 'd', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'delete'})<CR>]], opt)
+					vim.keymap.set('n', 'r', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'rename'})<CR>]], opt)
+					vim.keymap.set('n', 'mv', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'move'})<CR>]], opt)
+					vim.keymap.set('n', 't', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'newFile'})<CR>]], opt)
+					vim.keymap.set('n', 'mk', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'newDirectory'})<CR>]], opt)
+					vim.keymap.set('n', 'yy', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'yank'})<CR>]], opt)
+					vim.keymap.set('n', 'S', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'open', 'params': {'command': 'split'}})<CR>]], opt)
+					vim.keymap.set('n', 'V', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'open', 'params': {'command': 'vsplit'}})<CR>]], opt)
+					vim.keymap.set('n', 'T', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'open', 'params': {'command': 'tabedit'}})<CR>]], opt)
+				end,
+			})
+		end,
+		init = function()
+			vim.keymap.set('n', '<Leader>df', [[<Cmd>call ddu#start({ 'name': 'filer', 'searchPath': expand('%:p'), })<CR>]], { noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>dF', [[<Cmd>call ddu#start(#{ sources: [#{ name: 'file_rec' }] })<CR>]], { noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>db', [[<Cmd>call ddu#start(#{ sources: [#{ name: 'buffer' }] })<CR>]], { noremap = true, silent = true })
 		end,
 	},
 }
