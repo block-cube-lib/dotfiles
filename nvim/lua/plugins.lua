@@ -10,14 +10,14 @@ return {
 	{
 		"lukas-reineke/indent-blankline.nvim",
 		lazy = false,
-		config = function()
-			show_end_of_line = true
-		end
+		opts = {
+			show_end_of_line = true,
+		}
 	},
 	{
 		"nvim-treesitter/nvim-treesitter",
 		lazy = false,
-		config = {
+		opts = {
 			sync_install = false,
 			auto_install = true,
 			highlight = {
@@ -31,6 +31,9 @@ return {
 					end
 				end,
 				additional_vim_regex_highlighting = false,
+			},
+			indent = {
+				enable = true,
 			},
 		},
 	},
@@ -59,7 +62,7 @@ return {
 			"nvim-tree/nvim-web-devicons",
 			"arkav/lualine-lsp-progress",
 		},
-		config = {
+		opts = {
 			icons_enabled = true,
 			theme = 'auto',
 			component_separators = { left = '', right = ''},
@@ -75,28 +78,28 @@ return {
 				statusline = 1000,
 				tabline = 1000,
 				winbar = 1000,
-			}
+			},
+			sections = {
+				lualine_a = {'mode'},
+				lualine_b = {'branch', 'diff', 'diagnostics'},
+				lualine_c = {'filename', 'lsp_progress'},
+				lualine_x = {'encoding', 'fileformat', 'filetype'},
+				lualine_y = {'progress'},
+				lualine_z = {'location'}
+			},
+			inactive_sections = {
+				lualine_a = {},
+				lualine_b = {},
+				lualine_c = {'filename'},
+				lualine_x = {'location'},
+				lualine_y = {},
+				lualine_z = {}
+			},
+			tabline = {},
+			winbar = {},
+			inactive_winbar = {},
+			extensions = {}
 		},
-		sections = {
-			lualine_a = {'mode'},
-			lualine_b = {'branch', 'diff', 'diagnostics'},
-			lualine_c = {'filename', 'lsp_progress'},
-			lualine_x = {'encoding', 'fileformat', 'filetype'},
-			lualine_y = {'progress'},
-			lualine_z = {'location'}
-		},
-		inactive_sections = {
-			lualine_a = {},
-			lualine_b = {},
-			lualine_c = {'filename'},
-			lualine_x = {'location'},
-			lualine_y = {},
-			lualine_z = {}
-		},
-		tabline = {},
-		winbar = {},
-		inactive_winbar = {},
-		extensions = {}
 	},
 	{
 		"vim-denops/denops.vim",
@@ -123,16 +126,16 @@ return {
 	},
 	{
 		"neovim/nvim-lspconfig",
-		ft = {'rust', 'ts'},
+		ft = {'rust', 'lua'},
 		config = function()
 			local lspconfig = require('lspconfig')
 
-			local on_attack = function(client)
-				require'completion'.on_attack(client)
+			local on_attach = function(client)
+				require'completion'.on_attach(client)
 			end
 
 			lspconfig.rust_analyzer.setup {
-				-- Server-specific settings. See `:help lspconfig-setup`
+				on_attach = on_attach,
 				settings = {
 					["rust-analyzer"] = {
 						imports = {
@@ -149,8 +152,18 @@ return {
 						procMacro = {
 							enable = true
 						},
-					}
+					},
 				}
+			}
+			lspconfig.lua_ls.setup {
+				on_attach = on_attach,
+				settings = {
+					Lua = {
+						diagnostics = {
+							globals = {'vim'},
+						},
+					},
+				},
 			}
 
 			-- Global mappings.
@@ -176,62 +189,115 @@ return {
 					vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
 					vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
 					vim.keymap.set('n', '<C-k>', vim.lsp.buf.signature_help, opts)
-					vim.keymap.set('n', '<space>wa', vim.lsp.buf.add_workspace_folder, opts)
-					vim.keymap.set('n', '<space>wr', vim.lsp.buf.remove_workspace_folder, opts)
-					vim.keymap.set('n', '<space>wl', function()
+					vim.keymap.set('n', '<Leader>wa', vim.lsp.buf.add_workspace_folder, opts)
+					vim.keymap.set('n', '<Leader>wr', vim.lsp.buf.remove_workspace_folder, opts)
+					vim.keymap.set('n', '<Leader>wl', function()
 						print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
 					end, opts)
 					vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, opts)
 					vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, opts)
 					vim.keymap.set({ 'n', 'v' }, '<space>ca', vim.lsp.buf.code_action, opts)
 					vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
-					vim.keymap.set('n', '<space>f', function()
+					vim.keymap.set('n', '<Leader>f', function()
 						vim.lsp.buf.format { async = true }
 					end, opts)
 				end,
 			})
 		end,
 	},
-	{ "Shougo/ddc-ui-native", lazy = true, },
+	{
+		"matsui54/denops-popup-preview.vim",
+		lazy = true,
+		dependencies = {
+			"vim-denops/denops.vim",
+		},
+		config = function()
+			vim.fn["popup_preview#enable"]()
+		end,
+	},
+	{ "hrsh7th/vim-vsnip", lazy = true, },
+	{
+		"hrsh7th/vim-vsnip-integ",
+		lazy = true,
+		dependencies = { "hrsh7th/vim-vsnip", },
+		config = function()
+			vim.keymap.set('i', '<C-l>', [[vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>']], { expr = true, noremap = false })
+			vim.keymap.set('s', '<C-l>', [[vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>']], { expr = true, noremap = false })
+			vim.keymap.set('i', '<Tab>', [[vsnip#jumpable(1) ? '<Plug>(vsnip-expand-or-next)' : '<Tab>']], { expr = true, noremap = false })
+			vim.keymap.set('s', '<Tab>', [[vsnip#jumpable(1) ? '<Plug>(vsnip-expand-or-next)' : '<Tab>']], { expr = true, noremap = false })
+			vim.keymap.set('i', '<S-Tab>', [[vsnip#jumpable(-1) ? '<Plug>(vsnip-expand-or-prev)' : '<S-Tab>']], { expr = true, noremap = false })
+			vim.keymap.set('s', '<S-Tab>', [[vsnip#jumpable(-1) ? '<Plug>(vsnip-expand-or-prev)' : '<S-Tab>']], { expr = true, noremap = false })
+			vim.keymap.set('n', '<s>', [[<Plug>(vsnip-select-text)]], { expr = true, noremap = false })
+			vim.keymap.set('x', '<s>', [[<Plug>(vsnip-select-text)]], { expr = true, noremap = false })
+			vim.keymap.set('n', '<S>', [[<Plug>(vsnip-cut-text)]], { expr = true, noremap = false })
+			vim.keymap.set('x', '<S>', [[<Plug>(vsnip-cut-text)]], { expr = true, noremap = false })
+		end,
+	},
+	{ "tani/ddc-fuzzy", lazy = true, },
+	{ "Shougo/pum.vim", lazy = true, },
+	{ "Shougo/ddc-ui-pum", lazy = true, },
 	{ "Shougo/ddc-source-around", lazy = true, },
-	{ "Shougo/ddc-matcher_head", lazy = true, },
 	{ "Shougo/ddc-sorter_rank", lazy = true, },
 	{ "Shougo/ddc-source-nvim-lsp", lazy = true, },
 	{
 		"Shougo/ddc.vim",
 		lazy = false,
 		dependencies = {
+			"hrsh7th/vim-vsnip",
+			"hrsh7th/vim-vsnip-integ",
 			"vim-denops/denops.vim",
-			"Shougo/ddc-ui-native",
+			"matsui54/denops-popup-preview.vim",
+			"tani/ddc-fuzzy",
+			"Shougo/pum.vim",
+			"Shougo/ddc-ui-pum",
 			"Shougo/ddc-source-around",
-			"Shougo/ddc-matcher_head",
 			"Shougo/ddc-sorter_rank",
 			"Shougo/ddc-source-nvim-lsp",
 		},
 		config = function()
-			vim.fn["ddc#custom#patch_global"]('ui', 'native')
-			vim.fn["ddc#custom#patch_global"]('sources', {'around', 'nvim-lsp'})
-			vim.fn["ddc#custom#patch_global"]('sourceOptions', {
-				_ = {
-					matchers = {'matcher_head'},
-					sorters = {'sorter_rank'},
-				}
-			})
-			vim.fn["ddc#custom#patch_global"]('sourceOptions', {
-				around = { mark = '[around]' },
-				["nvim-lsp"] = {
-					mark = '[LSP]',
-					forceCompletionPattern = {[['\.\w*|:\w*|->\w*']]},
-					minAutoCompleteLength = 0,
+			vim.fn["ddc#custom#patch_global"]({
+				ui = 'pum',
+				autoCompleteEvents = {'InsertEnter', 'TextChangedI', 'TextChangedP', 'CmdlineChanged'},
+				sources = {
+					'nvim-lsp',
+					'around',
+				},
+				sourceOptions = {
+					_ = {
+						matchers = {'matcher_fuzzy'},
+						sorters = {'sorter_fuzzy', 'sorter_rank'},
+						converters = {'converter_fuzzy'},
+					},
+					["nvim-lsp"] = {
+						mark = '[LSP]',
+						forceCompletionPattern = {[['\.\w*|:\w*|->\w*']]},
+						minAutoCompleteLength = 0,
+					},
+					around = { mark = '[around]' },
+				},
+				sourceParams = {
+					around = { maxSize = 100 },
 				},
 			})
-			vim.fn["ddc#custom#patch_global"]('sourceParams', {
-				around = { maxSize = 500 },
-				-- nvim-lsp = { kindLabels = { Class = 'c' } }
-			})
 			vim.fn["ddc#custom#patch_filetype"]('markdown', 'sourceParams', {
-				around = { maxSize = 100 }
+				around = { maxSize = 50 }
 			})
+			vim.api.nvim_create_autocmd('InsertEnter', {
+				callback = function(ev)
+					local opt = { noremap = true }
+					vim.keymap.set('i', '<C-n>', [[<Cmd>call pum#map#insert_relative(+1)<CR>]], opt)
+					vim.keymap.set('i', '<C-p>', [[<Cmd>call pum#map#insert_relative(-1)<CR>]], opt)
+					vim.keymap.set('i', '<C-y>', [[<Cmd>call pum#map#confirm()<CR>]], opt)
+					vim.keymap.set('i', '<C-e>', [[<Cmd>call pum#map#cancel()<CR>]], opt)
+					vim.keymap.set('i', '<PageDown>', [[<Cmd>call pum#map#insert_relative_page(+1)<CR>]], opt)
+					vim.keymap.set('i', '<PageUp>', [[<Cmd>call pum#map#insert_relative_page(-1)<CR>]], opt)
+				end,
+			})
+			vim.api.nvim_create_autocmd('User', {
+				pattern = 'PumCompleteDone',
+				command = "call vsnip_integ#on_complete_done(g:pum#completed_item)",
+			})
+			vim.g.vsnip_filetypes = {}
 			vim.fn["ddc#enable"]()
 		end,
 	},

@@ -1,3 +1,6 @@
+CONFIG_HOME = os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")
+CACHE_HOME = os.getenv("XDG_CACHE_HOME") or (os.getenv("HOME") .. "/.cache")
+
 vim.cmd("autocmd!")
 
 vim.scriptencoding = "utf-8"
@@ -7,7 +10,6 @@ vim.wo.cursorline = true
 vim.opt.ruler = true
 
 -- Restore cursor location when file is opened
-local autogroup = vim.api.nvim_create_augroup -- Create/get autocommand group
 local autocmd = vim.api.nvim_create_autocmd -- Create autocommand
 autocmd({ "BufReadPost" }, {
 	pattern = { "*" },
@@ -22,11 +24,11 @@ vim.opt.fileencoding = "utf-8"
 
 -- System files
 vim.opt.backup = true
-vim.opt.backupdir = cache_home..'/nvim/backup'
+vim.opt.backupdir = CACHE_HOME..'/nvim/backup'
 vim.opt.swapfile = true
-vim.opt.directory = cache_home..'/nvim/swap'
+vim.opt.directory = CACHE_HOME..'/nvim/swap'
 vim.opt.backup = true
-vim.opt.backupdir = cache_home..'/nvim/backup'
+vim.opt.backupdir = CACHE_HOME..'/nvim/backup'
 vim.opt.termguicolors = true
 
 -- Editor
@@ -57,5 +59,5 @@ vim.opt.showcmd = true
 vim.opt.wildmenu = true
 
 if not vim.fn.exists('g:vscode') then
-	vim.opt.ambiwidth = single
+	vim.opt.ambiwidth = 'single'
 end
