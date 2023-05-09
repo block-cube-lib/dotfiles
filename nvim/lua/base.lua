@@ -29,7 +29,8 @@ vim.opt.swapfile = true
 vim.opt.directory = CACHE_HOME..'/nvim/swap'
 vim.opt.backup = true
 vim.opt.backupdir = CACHE_HOME..'/nvim/backup'
-vim.opt.termguicolors = true
+vim.opt.undofile = true
+vim.opt.undodir = CACHE_HOME..'/nvim/undo'
 
 -- Editor
 vim.opt.title = true
@@ -51,6 +52,8 @@ vim.opt.smartcase = true
 vim.opt.wrapscan = true
 
 -- other
+vim.opt.termguicolors = true
+
 vim.opt.syntax = 'on'
 
 vim.opt.cmdheight = 2
