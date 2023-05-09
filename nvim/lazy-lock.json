@@ -1,4 +1,5 @@
 {
+  "ddc-converter_remove_overlap": { "branch": "main", "commit": "dfed51c4b0e1c5713d4826cc41ed2afb446f4b04" },
   "ddc-fuzzy": { "branch": "main", "commit": "146efed475b3ce9cdbe5a2ae4a593f6fb3f466d6" },
   "ddc-sorter_rank": { "branch": "main", "commit": "db14b0450e27f9117e6983879ce5c81efe26d89f" },
   "ddc-source-around": { "branch": "main", "commit": "e9ea00419c2fa51746316d0cc5b392f05991e0bd" },

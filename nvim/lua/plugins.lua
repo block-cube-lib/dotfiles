@@ -130,12 +130,10 @@ return {
 		config = function()
 			local lspconfig = require('lspconfig')
 
-			local on_attach = function(client)
-				require'completion'.on_attach(client)
-			end
-
+			local capabilities = vim.lsp.protocol.make_client_capabilities()
+			capabilities.textDocument.completion.completionItem.snippetSupport = true
 			lspconfig.rust_analyzer.setup {
-				on_attach = on_attach,
+				capabilities = capabilities,
 				settings = {
 					["rust-analyzer"] = {
 						imports = {
@@ -156,7 +154,6 @@ return {
 				}
 			}
 			lspconfig.lua_ls.setup {
-				on_attach = on_attach,
 				settings = {
 					Lua = {
 						diagnostics = {
@@ -221,12 +218,12 @@ return {
 		lazy = true,
 		dependencies = { "hrsh7th/vim-vsnip", },
 		config = function()
-			vim.keymap.set('i', '<C-l>', [[vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>']], { expr = true, noremap = false })
-			vim.keymap.set('s', '<C-l>', [[vsnip#available(1) ? '<Plug>(vsnip-expand-or-jump)' : '<C-l>']], { expr = true, noremap = false })
-			vim.keymap.set('i', '<Tab>', [[vsnip#jumpable(1) ? '<Plug>(vsnip-expand-or-next)' : '<Tab>']], { expr = true, noremap = false })
-			vim.keymap.set('s', '<Tab>', [[vsnip#jumpable(1) ? '<Plug>(vsnip-expand-or-next)' : '<Tab>']], { expr = true, noremap = false })
-			vim.keymap.set('i', '<S-Tab>', [[vsnip#jumpable(-1) ? '<Plug>(vsnip-expand-or-prev)' : '<S-Tab>']], { expr = true, noremap = false })
-			vim.keymap.set('s', '<S-Tab>', [[vsnip#jumpable(-1) ? '<Plug>(vsnip-expand-or-prev)' : '<S-Tab>']], { expr = true, noremap = false })
+			vim.keymap.set('i', '<C-l>', function() return vim.fn['vsnip#available'](1) == 1 and '<Plug>(vsnip-expand-or-jump)' or '<C-l>' end, { expr = true, noremap = false })
+			vim.keymap.set('s', '<C-l>', function() return vim.fn['vsnip#available'](1) == 1 and '<Plug>(vsnip-expand-or-jump)' or '<C-l>' end, { expr = true, noremap = false })
+			vim.keymap.set('i', '<Tab>', function() return vim.fn['vsnip#jumpable'](1) == 1 and '<Plug>(vsnip-jump-next)' or '<Tab>' end, { expr = true, noremap = false })
+			vim.keymap.set('s', '<Tab>', function() return vim.fn['vsnip#jumpable'](1) == 1 and '<Plug>(vsnip-jump-next)' or '<Tab>' end, { expr = true, noremap = false })
+			vim.keymap.set('i', '<S-Tab>', function() return vim.fn['vsnip#jumpable'](-1) == 1 and '<Plug>(vsnip-jump-prev)' or '<S-Tab>' end, { expr = true, noremap = false })
+			vim.keymap.set('s', '<S-Tab>', function() return vim.fn['vsnip#jumpable'](-1) == 1 and '<Plug>(vsnip-jump-prev)' or '<S-Tab>' end, { expr = true, noremap = false })
 			vim.keymap.set('n', '<s>', [[<Plug>(vsnip-select-text)]], { expr = true, noremap = false })
 			vim.keymap.set('x', '<s>', [[<Plug>(vsnip-select-text)]], { expr = true, noremap = false })
 			vim.keymap.set('n', '<S>', [[<Plug>(vsnip-cut-text)]], { expr = true, noremap = false })
@@ -239,6 +236,7 @@ return {
 	{ "Shougo/ddc-source-around", lazy = true, },
 	{ "Shougo/ddc-sorter_rank", lazy = true, },
 	{ "Shougo/ddc-source-nvim-lsp", lazy = true, },
+	{ "Shougo/ddc-converter_remove_overlap", lazy = true, },
 	{
 		"Shougo/ddc.vim",
 		lazy = false,
@@ -253,12 +251,14 @@ return {
 			"Shougo/ddc-source-around",
 			"Shougo/ddc-sorter_rank",
 			"Shougo/ddc-source-nvim-lsp",
+			"Shougo/ddc-converter_remove_overlap",
 		},
 		config = function()
 			vim.fn["ddc#custom#patch_global"]({
 				ui = 'pum',
-				autoCompleteEvents = {'InsertEnter', 'TextChangedI', 'TextChangedP', 'CmdlineChanged'},
+				autoCompleteEvents = {'InsertEnter', 'TextChangedI', 'TextChangedP', 'CmdlineChanged', 'CmdlineEnter'},
 				sources = {
+					'vsnip',
 					'nvim-lsp',
 					'around',
 				},
@@ -266,12 +266,16 @@ return {
 					_ = {
 						matchers = {'matcher_fuzzy'},
 						sorters = {'sorter_fuzzy', 'sorter_rank'},
-						converters = {'converter_fuzzy'},
+						converters = {'converter_remove_overlap', 'converter_fuzzy'},
+					},
+					vsnip = {
+						mark = 'vsnip',
+						dup = true,
 					},
 					["nvim-lsp"] = {
 						mark = '[LSP]',
 						forceCompletionPattern = {[['\.\w*|:\w*|->\w*']]},
-						minAutoCompleteLength = 0,
+						minAutoCompleteLength = 3,
 					},
 					around = { mark = '[around]' },
 				},
@@ -285,17 +289,19 @@ return {
 			vim.api.nvim_create_autocmd('InsertEnter', {
 				callback = function(ev)
 					local opt = { noremap = true }
-					vim.keymap.set('i', '<C-n>', [[<Cmd>call pum#map#insert_relative(+1)<CR>]], opt)
-					vim.keymap.set('i', '<C-p>', [[<Cmd>call pum#map#insert_relative(-1)<CR>]], opt)
+					vim.keymap.set('i', '<C-n>', [[(pum#visible() ? '' : ddc#map#manual_complete()) . pum#map#select_relative(+1)]], { expr = true, noremap = false })
+					vim.keymap.set('i', '<C-p>', [[(pum#visible() ? '' : ddc#map#manual_complete()) . pum#map#select_relative(-1)]], { expr = true, noremap = false })
 					vim.keymap.set('i', '<C-y>', [[<Cmd>call pum#map#confirm()<CR>]], opt)
 					vim.keymap.set('i', '<C-e>', [[<Cmd>call pum#map#cancel()<CR>]], opt)
 					vim.keymap.set('i', '<PageDown>', [[<Cmd>call pum#map#insert_relative_page(+1)<CR>]], opt)
 					vim.keymap.set('i', '<PageUp>', [[<Cmd>call pum#map#insert_relative_page(-1)<CR>]], opt)
+					vim.keymap.set('i', '<CR>', [[pum#visible() ? pum#map#confirm() : '<CR>']], { expr = true, noremap = false })
 				end,
 			})
 			vim.api.nvim_create_autocmd('User', {
+				group = vim.api.nvim_create_augroup('pum-complete-done', {}),
 				pattern = 'PumCompleteDone',
-				command = "call vsnip_integ#on_complete_done(g:pum#completed_item)",
+				command = [[call vsnip_integ#on_complete_done(g:pum#completed_item)]],
 			})
 			vim.g.vsnip_filetypes = {}
 			vim.fn["ddc#enable"]()
