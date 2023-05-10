@@ -214,6 +214,22 @@ return {
 			vim.fn["popup_preview#enable"]()
 		end,
 	},
+	{
+		"matsui54/denops-signature_help",
+		lazy = true,
+		dependencies = {
+			"vim-denops/denops.vim",
+		},
+		init = function()
+			vim.g.signature_help_config = {
+				contentsStyle = "full",
+				viewStyle = "floating",
+			}
+		end,
+		config = function()
+			vim.fn["signature_help#enable"]()
+		end,
+	},
 	{ "hrsh7th/vim-vsnip", lazy = true, },
 	{
 		"hrsh7th/vim-vsnip-integ",
@@ -247,6 +263,7 @@ return {
 			"hrsh7th/vim-vsnip-integ",
 			"vim-denops/denops.vim",
 			"matsui54/denops-popup-preview.vim",
+			"matsui54/denops-signature_help",
 			"tani/ddc-fuzzy",
 			"Shougo/pum.vim",
 			"Shougo/ddc-ui-pum",
