@@ -31,6 +31,7 @@
   "playground": { "branch": "master", "commit": "2b81a018a49f8e476341dfcb228b7b808baba68b" },
   "pum.vim": { "branch": "main", "commit": "3a94bde829c612d64094b6337b724fcbe1b87fd0" },
   "tokyonight.nvim": { "branch": "main", "commit": "ab0ac67f4f32f44c3480f4b81ed90e11cb4f3763" },
+  "vim-sonictemplate": { "branch": "master", "commit": "0e4d422c85decd8d159c663f234eb484b1b04b25" },
   "vim-vsnip": { "branch": "master", "commit": "7753ba9c10429c29d25abfd11b4c60b76718c438" },
   "vim-vsnip-integ": { "branch": "master", "commit": "1930f0fc234521945afd48db2bff09d925211571" }
 }

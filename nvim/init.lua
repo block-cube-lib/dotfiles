@@ -188,15 +188,6 @@ local plugins = {
 		},
 	},
 	{
-		"vim-denops/denops.vim",
-		lazy = true,
-	},
-	{
-		"skanehira/denops-translate.vim",
-		lazy = false,
-		dependencies = { "vim-denops/denops.vim", },
-	},
-	{
 		"monaqa/dial.nvim",
 		lazy = false,
 		init = function()
@@ -209,6 +200,22 @@ local plugins = {
 			vim.keymap.set("v", "g<C-a>",require("dial.map").inc_gvisual(), {noremap = true})
 			vim.keymap.set("v", "g<C-x>",require("dial.map").dec_gvisual(), {noremap = true})
 		end,
+	},
+	{
+		"mattn/vim-sonictemplate",
+		lazy = false,
+		init = function()
+			vim.g.sonictemplate_vim_template_dir = CONFIG_HOME..'/nvim/templates'
+		end,
+	},
+	{
+		"vim-denops/denops.vim",
+		lazy = true,
+	},
+	{
+		"skanehira/denops-translate.vim",
+		lazy = false,
+		dependencies = { "vim-denops/denops.vim", },
 	},
 	{
 		"neovim/nvim-lspconfig",
