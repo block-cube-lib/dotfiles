@@ -527,7 +527,14 @@ local plugins = {
 				pattern = { 'ddu-filer' },
 				callback = function(ev)
 					local opt = { noremap = true, silent = true, buffer = ev.buf }
-					vim.keymap.set('n', '<CR>', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'open'})<CR>]], opt)
+					local crAction = function ()
+						if vim.fn['ddu#ui#get_item']()['action']['isDirectory'] then
+							vim.fn["ddu#ui#filer#do_action"]('expandItem', {mode = 'toggle'})
+						else
+							vim.fn["ddu#ui#filer#do_action"]('itemAction', {name = 'open'})
+						end
+					end
+					vim.keymap.set('n', '<CR>', crAction, opt)
 					vim.keymap.set('n', 'o', [[<Cmd>call ddu#ui#filer#do_action('expandItem', {'mode': 'toggle'})<CR>]], opt)
 					vim.keymap.set('n', '<Space>', [[<Cmd>call ddu#ui#filer#do_action('expandItem', {'mode': 'toggle'})<CR>]], opt)
 					vim.keymap.set('n', '<Esc>', [[<Cmd>call ddu#ui#filer#do_action('quit')<CR>]], opt)
