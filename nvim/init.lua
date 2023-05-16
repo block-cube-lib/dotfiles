@@ -295,8 +295,8 @@ local plugins = {
 						print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
 					end, opts)
 					vim.keymap.set('n', '<space>D', vim.lsp.buf.type_definition, opts)
-					vim.keymap.set('n', '<space>rn', vim.lsp.buf.rename, opts)
-					vim.keymap.set({ 'n', 'v' }, '<space>ca', vim.lsp.buf.code_action, opts)
+					vim.keymap.set('n', '<Leader>r', vim.lsp.buf.rename, opts)
+					vim.keymap.set({ 'n', 'v' }, '<Leader>ca', vim.lsp.buf.code_action, opts)
 					vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
 					vim.keymap.set('n', '<Leader>f', function()
 						vim.lsp.buf.format { async = true }
@@ -337,16 +337,11 @@ local plugins = {
 		lazy = true,
 		dependencies = { "hrsh7th/vim-vsnip", },
 		config = function()
-			vim.keymap.set('i', '<C-l>', function() return vim.fn['vsnip#available'](1) == 1 and '<Plug>(vsnip-expand-or-jump)' or '<C-l>' end, { expr = true, noremap = false })
-			vim.keymap.set('s', '<C-l>', function() return vim.fn['vsnip#available'](1) == 1 and '<Plug>(vsnip-expand-or-jump)' or '<C-l>' end, { expr = true, noremap = false })
-			vim.keymap.set('i', '<Tab>', function() return vim.fn['vsnip#jumpable'](1) == 1 and '<Plug>(vsnip-jump-next)' or '<Tab>' end, { expr = true, noremap = false })
-			vim.keymap.set('s', '<Tab>', function() return vim.fn['vsnip#jumpable'](1) == 1 and '<Plug>(vsnip-jump-next)' or '<Tab>' end, { expr = true, noremap = false })
-			vim.keymap.set('i', '<S-Tab>', function() return vim.fn['vsnip#jumpable'](-1) == 1 and '<Plug>(vsnip-jump-prev)' or '<S-Tab>' end, { expr = true, noremap = false })
-			vim.keymap.set('s', '<S-Tab>', function() return vim.fn['vsnip#jumpable'](-1) == 1 and '<Plug>(vsnip-jump-prev)' or '<S-Tab>' end, { expr = true, noremap = false })
-			vim.keymap.set('n', '<s>', [[<Plug>(vsnip-select-text)]], { expr = true, noremap = false })
-			vim.keymap.set('x', '<s>', [[<Plug>(vsnip-select-text)]], { expr = true, noremap = false })
-			vim.keymap.set('n', '<S>', [[<Plug>(vsnip-cut-text)]], { expr = true, noremap = false })
-			vim.keymap.set('x', '<S>', [[<Plug>(vsnip-cut-text)]], { expr = true, noremap = false })
+			vim.keymap.set({'i', 's'}, '<C-l>', function() return vim.fn['vsnip#available'](1) == 1 and '<Plug>(vsnip-expand-or-jump)' or '<C-l>' end, { expr = true, noremap = false })
+			vim.keymap.set({'i', 's'}, '<Tab>', function() return vim.fn['vsnip#jumpable'](1) == 1 and '<Plug>(vsnip-jump-next)' or '<Tab>' end, { expr = true, noremap = false })
+			vim.keymap.set({'i', 's'}, '<S-Tab>', function() return vim.fn['vsnip#jumpable'](-1) == 1 and '<Plug>(vsnip-jump-prev)' or '<S-Tab>' end, { expr = true, noremap = false })
+			vim.keymap.set({'n', 's'}, '<s>', [[<Plug>(vsnip-select-text)]], { expr = true, noremap = false })
+			vim.keymap.set({'n', 's'}, '<S>', [[<Plug>(vsnip-cut-text)]], { expr = true, noremap = false })
 		end,
 	},
 	{ "tani/ddc-fuzzy", lazy = true, },
