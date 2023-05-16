@@ -75,6 +75,12 @@ vim.keymap.set('n', '<Leader>tt', [[<Cmd>tabnew<CR><Cmd>terminal<CR>]], { norema
 -- terminal
 vim.keymap.set('t', '<C-Q>', [[<C-\><C-n>]], { noremap = true, silent = true })
 
+-- vscode
+if vim.g.vscode then
+	vim.keymap.set('n', 'gd', [[<Cmd>call VSCodeCall('editor.action.revealDefinition')<CR>]], { noremap = true, silent = true })
+	vim.keymap.set({'n', 'v'}, '<Leader>r', [[<Cmd>call VSCodeCall('editor.action.rename')<CR>]], { noremap = true, silent = true })
+end
+
 ---------------------------------------------------
 -- plugins
 ---------------------------------------------------
@@ -86,6 +92,7 @@ local plugins = {
 	{
 		"folke/tokyonight.nvim",
 		lazy = false,
+		enabled = not vim.g.vecode,
 		priority = 1000,
 		config = function()
 			vim.cmd([[colorscheme tokyonight]])
@@ -101,6 +108,7 @@ local plugins = {
 	{
 		"nvim-treesitter/nvim-treesitter",
 		lazy = false,
+		enabled = not vim.g.vecode,
 		config = function()
 			require('nvim-treesitter.configs').setup {
 				sync_install = false,
@@ -126,11 +134,13 @@ local plugins = {
 	{
 		"nvim-treesitter/nvim-treesitter-context",
 		lazy = false,
+		enabled = not vim.g.vecode,
 		dependencies = { "nvim-treesitter/nvim-treesitter", },
 	},
 	{
 		'nvim-treesitter/playground',
 		lazy = false,
+		enabled = not vim.g.vecode,
 		dependencies = { 'nvim-treesitter/nvim-treesitter' },
 	},
 	{
@@ -349,6 +359,7 @@ local plugins = {
 	{
 		"Shougo/ddc.vim",
 		lazy = false,
+		enabled = not vim.g.vecode,
 		dependencies = {
 			"hrsh7th/vim-vsnip",
 			"hrsh7th/vim-vsnip-integ",
@@ -434,6 +445,7 @@ local plugins = {
 	{
 		"Shougo/ddu.vim",
 		lazy = false,
+		enabled = not vim.g.vecode,
 		dependencies = {
 			"vim-denops/denops.vim",
 			"Shougo/ddu.vim",
