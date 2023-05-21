@@ -70,8 +70,6 @@ end
 ---------------------------------------------------
 vim.g.mapleader = ' '
 
--- open terminal
-vim.keymap.set('n', '<Leader>tt', [[<Cmd>tabnew<CR><Cmd>terminal<CR>]], { noremap = true, silent = true })
 -- terminal
 vim.keymap.set('t', '<C-Q>', [[<C-\><C-n>]], { noremap = true, silent = true })
 
@@ -564,6 +562,14 @@ local plugins = {
 			vim.keymap.set('n', '<Leader>dF', [[<Cmd>call ddu#start(#{ sources: [#{ name: 'file_rec' }] })<CR>]], { noremap = true, silent = true })
 			vim.keymap.set('n', '<Leader>db', [[<Cmd>call ddu#start(#{ sources: [#{ name: 'buffer' }] })<CR>]], { noremap = true, silent = true })
 		end,
+	},
+	{
+		'Shougo/deol.nvim',
+		lazy = false,
+		init = function()
+			vim.keymap.set('n', '<Leader>tt', [[<Cmd>tabnew<CR><Cmd>Deol<CR>]], { noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>tf', [[<Cmd>Deol -split=floating<CR>]], { noremap = true, silent = true })
+		end
 	},
 }
 
