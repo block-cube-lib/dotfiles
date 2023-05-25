@@ -221,6 +221,9 @@ local plugins = {
 		lazy = false,
 		cond = not vim.g.vscode,
 		dependencies = { "vim-denops/denops.vim", },
+		config = function ()
+			vim.keymap.set({'v', 'n'}, "<Leader><Leader>t", "<Cmd>Translate<CR>", { noremap = true, silent = true })
+		end
 	},
 	{
 		"neovim/nvim-lspconfig",
