@@ -227,8 +227,8 @@ local plugins = {
 	},
 	{
 		"neovim/nvim-lspconfig",
-		ft = {'rust', 'lua'},
 		cond = not vim.g.vscode,
+		ft = {'rust', 'lua', 'cs'},
 		config = function()
 			local lspconfig = require('lspconfig')
 
@@ -263,6 +263,12 @@ local plugins = {
 						},
 					},
 				},
+			}
+			local pid = vim.fn.getpid()
+			local omnisharp_command = vim.fn.has('win32') == 1 and "OmniSharp.exe" or "OmniSharp"
+			print(omnisharp_command)
+			lspconfig.omnisharp.setup {
+				cmd = { omnisharp_command, "--languageserver", "--hostPID", tostring(pid) },
 			}
 
 			-- Global mappings.
