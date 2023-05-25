@@ -82,15 +82,10 @@ end
 ---------------------------------------------------
 -- plugins
 ---------------------------------------------------
-if vim.g.vecode then
-	return
-end
-
 local plugins = {
 	{
 		"folke/tokyonight.nvim",
 		lazy = false,
-		enabled = not vim.g.vecode,
 		priority = 1000,
 		config = function()
 			vim.cmd([[colorscheme tokyonight]])
@@ -99,6 +94,7 @@ local plugins = {
 	{
 		"lukas-reineke/indent-blankline.nvim",
 		lazy = false,
+		cond = not vim.g.vscode,
 		opts = {
 			show_end_of_line = true,
 		}
@@ -106,7 +102,6 @@ local plugins = {
 	{
 		"nvim-treesitter/nvim-treesitter",
 		lazy = false,
-		enabled = not vim.g.vecode,
 		config = function()
 			require('nvim-treesitter.configs').setup {
 				sync_install = false,
@@ -132,13 +127,13 @@ local plugins = {
 	{
 		"nvim-treesitter/nvim-treesitter-context",
 		lazy = false,
-		enabled = not vim.g.vecode,
+		cond = not vim.g.vscode,
 		dependencies = { "nvim-treesitter/nvim-treesitter", },
 	},
 	{
 		'nvim-treesitter/playground',
 		lazy = false,
-		enabled = not vim.g.vecode,
+		cond = not vim.g.vscode,
 		dependencies = { 'nvim-treesitter/nvim-treesitter' },
 	},
 	{
@@ -152,6 +147,7 @@ local plugins = {
 	{
 		"nvim-lualine/lualine.nvim",
 		lazy = false,
+		cond = not vim.g.vscode,
 		dependencies = {
 			"nvim-tree/nvim-web-devicons",
 			"arkav/lualine-lsp-progress",
@@ -223,6 +219,7 @@ local plugins = {
 	{
 		"skanehira/denops-translate.vim",
 		lazy = false,
+		cond = not vim.g.vscode,
 		dependencies = { "vim-denops/denops.vim", },
 	},
 	{
@@ -352,7 +349,7 @@ local plugins = {
 	{
 		"Shougo/ddc.vim",
 		lazy = false,
-		enabled = not vim.g.vecode,
+		cond = not vim.g.vscode,
 		dependencies = {
 			"hrsh7th/vim-vsnip",
 			"hrsh7th/vim-vsnip-integ",
@@ -438,7 +435,7 @@ local plugins = {
 	{
 		"Shougo/ddu.vim",
 		lazy = false,
-		enabled = not vim.g.vecode,
+		cond = not vim.g.vscode,
 		dependencies = {
 			"vim-denops/denops.vim",
 			"Shougo/ddu.vim",
@@ -566,6 +563,7 @@ local plugins = {
 	{
 		'Shougo/deol.nvim',
 		lazy = false,
+		cond = not vim.g.vscode,
 		init = function()
 			vim.keymap.set('n', '<Leader>tt', [[<Cmd>tabnew<CR><Cmd>Deol<CR>]], { noremap = true, silent = true })
 			vim.keymap.set('n', '<Leader>tf', [[<Cmd>Deol -split=floating<CR>]], { noremap = true, silent = true })
