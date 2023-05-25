@@ -195,14 +195,14 @@ local plugins = {
 		"monaqa/dial.nvim",
 		lazy = false,
 		init = function()
-			vim.keymap.set("n", "<C-a>", require("dial.map").inc_normal(), {noremap = true})
-			vim.keymap.set("n", "<C-x>", require("dial.map").dec_normal(), {noremap = true})
-			vim.keymap.set("n", "g<C-a>", require("dial.map").inc_gnormal(), {noremap = true})
-			vim.keymap.set("n", "g<C-x>", require("dial.map").dec_gnormal(), {noremap = true})
-			vim.keymap.set("v", "<C-a>", require("dial.map").inc_visual(), {noremap = true})
-			vim.keymap.set("v", "<C-x>", require("dial.map").dec_visual(), {noremap = true})
-			vim.keymap.set("v", "g<C-a>",require("dial.map").inc_gvisual(), {noremap = true})
-			vim.keymap.set("v", "g<C-x>",require("dial.map").dec_gvisual(), {noremap = true})
+			vim.keymap.set("n", "<C-a>", require("dial.map").inc_normal(), { noremap = true })
+			vim.keymap.set("n", "<C-x>", require("dial.map").dec_normal(), { noremap = true })
+			vim.keymap.set("n", "g<C-a>", require("dial.map").inc_gnormal(), { noremap = true })
+			vim.keymap.set("n", "g<C-x>", require("dial.map").dec_gnormal(), { noremap = true })
+			vim.keymap.set("v", "<C-a>", require("dial.map").inc_visual(), { noremap = true })
+			vim.keymap.set("v", "<C-x>", require("dial.map").dec_visual(), { noremap = true })
+			vim.keymap.set("v", "g<C-a>",require("dial.map").inc_gvisual(), { noremap = true })
+			vim.keymap.set("v", "g<C-x>",require("dial.map").dec_gvisual(), { noremap = true })
 		end,
 	},
 	{
@@ -566,7 +566,11 @@ local plugins = {
 		cond = not vim.g.vscode,
 		init = function()
 			vim.keymap.set('n', '<Leader>tt', [[<Cmd>tabnew<CR><Cmd>Deol<CR>]], { noremap = true, silent = true })
-			vim.keymap.set('n', '<Leader>tf', [[<Cmd>Deol -split=floating<CR>]], { noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>tc', [[<Cmd>Deol<CR>]], { noremap = true, silent = true }) -- current
+			vim.keymap.set('n', '<Leader>tf', [[<Cmd>Deol -split=floating -winheight=30 -winwidth=160<CR>]], { noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>tv', [[<Cmd>Deol -split=vertical<CR>]], { noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>tr', [[<Cmd>Deol -split=farright<CR>]], { noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>tl', [[<Cmd>Deol -split=farleft<CR>]], { noremap = true, silent = true })
 		end
 	},
 }
