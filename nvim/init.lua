@@ -228,6 +228,7 @@ local plugins = {
 	{
 		"neovim/nvim-lspconfig",
 		ft = {'rust', 'lua'},
+		cond = not vim.g.vscode,
 		config = function()
 			local lspconfig = require('lspconfig')
 
