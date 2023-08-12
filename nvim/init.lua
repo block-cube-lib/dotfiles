@@ -353,16 +353,13 @@ local plugins = {
 	},
 	{ "hrsh7th/vim-vsnip", lazy = true, },
 	{
-		"hrsh7th/vim-vsnip-integ",
+		"uga-rosa/ddc-source-vsnip",
 		lazy = true,
-		dependencies = { "hrsh7th/vim-vsnip", },
-		config = function()
-			vim.keymap.set({'i', 's'}, '<C-l>', function() return vim.fn['vsnip#available'](1) == 1 and '<Plug>(vsnip-expand-or-jump)' or '<C-l>' end, { expr = true, noremap = false })
-			vim.keymap.set({'i', 's'}, '<Tab>', function() return vim.fn['vsnip#jumpable'](1) == 1 and '<Plug>(vsnip-jump-next)' or '<Tab>' end, { expr = true, noremap = false })
-			vim.keymap.set({'i', 's'}, '<S-Tab>', function() return vim.fn['vsnip#jumpable'](-1) == 1 and '<Plug>(vsnip-jump-prev)' or '<S-Tab>' end, { expr = true, noremap = false })
-			vim.keymap.set({'n', 's'}, '<s>', [[<Plug>(vsnip-select-text)]], { expr = true, noremap = false })
-			vim.keymap.set({'n', 's'}, '<S>', [[<Plug>(vsnip-cut-text)]], { expr = true, noremap = false })
-		end,
+		dependencies =
+		{
+			"vim-denops/denops.vim",
+			"hrsh7th/vim-vsnip",
+		},
 	},
 	{ "tani/ddc-fuzzy", lazy = true, },
 	{ "Shougo/pum.vim", lazy = true, },
@@ -377,7 +374,7 @@ local plugins = {
 		cond = not vim.g.vscode,
 		dependencies = {
 			"hrsh7th/vim-vsnip",
-			"hrsh7th/vim-vsnip-integ",
+			"uga-rosa/ddc-source-vsnip",
 			"vim-denops/denops.vim",
 			"matsui54/denops-popup-preview.vim",
 			"matsui54/denops-signature_help",
@@ -392,30 +389,37 @@ local plugins = {
 		config = function()
 			vim.fn["ddc#custom#patch_global"]({
 				ui = 'pum',
-				autoCompleteEvents = {'InsertEnter', 'TextChangedI', 'TextChangedP', 'CmdlineChanged', 'CmdlineEnter'},
+				autoCompleteEvents = {'InsertEnter', 'TextChangedI', 'TextChangedP', 'CmdlineChanged', 'CmdlineEnter', 'TextChangedT'},
 				sources = {
 					'vsnip',
 					'nvim-lsp',
 					'around',
 				},
+				backspaceCompletion = true,
 				sourceOptions = {
 					_ = {
 						matchers = {'matcher_fuzzy'},
 						sorters = {'sorter_fuzzy', 'sorter_rank'},
 						converters = {'converter_remove_overlap', 'converter_fuzzy'},
 					},
-					vsnip = {
-						mark = 'vsnip',
-						dup = true,
+					["vsnip"] = {
+						mark = '[vsnip]',
+						keywordPattern = "\\S*",
 					},
 					["nvim-lsp"] = {
 						mark = '[LSP]',
 						forceCompletionPattern = {[['\.\w*|:\w*|->\w*']]},
-						minAutoCompleteLength = 3,
+						minAutoCompleteLength = 2,
 					},
 					around = { mark = '[around]' },
 				},
 				sourceParams = {
+					vsnip = { menu = false, },
+					["nvim-lsp"] = {
+						snippetEngine = vim.fn["denops#callback#register"](function(body) vim.fn["vsnip#anonymous"](body) end),
+						enableResolveItem = true,
+						enableAdditionalTextEdit = true,
+					},
 					around = { maxSize = 100 },
 				},
 			})
@@ -432,12 +436,12 @@ local plugins = {
 					vim.keymap.set('i', '<PageDown>', [[<Cmd>call pum#map#insert_relative_page(+1)<CR>]], opt)
 					vim.keymap.set('i', '<PageUp>', [[<Cmd>call pum#map#insert_relative_page(-1)<CR>]], opt)
 					vim.keymap.set('i', '<CR>', [[pum#visible() ? pum#map#confirm() : '<CR>']], { expr = true, noremap = false })
+					vim.keymap.set({'i', 's'}, '<C-l>', function() return vim.fn['vsnip#available'](1) == 1 and '<Plug>(vsnip-expand-or-jump)' or '<C-l>' end, { expr = true, noremap = false })
+					vim.keymap.set({'i', 's'}, '<Tab>', function() return vim.fn['vsnip#jumpable'](1) == 1 and '<Plug>(vsnip-jump-next)' or '<Tab>' end, { expr = true, noremap = false })
+					vim.keymap.set({'i', 's'}, '<S-Tab>', function() return vim.fn['vsnip#jumpable'](-1) == 1 and '<Plug>(vsnip-jump-prev)' or '<S-Tab>' end, { expr = true, noremap = false })
+					vim.keymap.set({'n', 's'}, '<s>', [[<Plug>(vsnip-select-text)]], { expr = true, noremap = false })
+					vim.keymap.set({'n', 's'}, '<S>', [[<Plug>(vsnip-cut-text)]], { expr = true, noremap = false })
 				end,
-			})
-			vim.api.nvim_create_autocmd('User', {
-				group = vim.api.nvim_create_augroup('pum-complete-done', {}),
-				pattern = 'PumCompleteDone',
-				command = [[call vsnip_integ#on_complete_done(g:pum#completed_item)]],
 			})
 			vim.g.vsnip_filetypes = {}
 			vim.fn["ddc#enable"]()
