@@ -51,6 +51,11 @@ vim.opt.ignorecase = true
 vim.opt.smartcase = true
 vim.opt.wrapscan = true
 
+-- terminal
+if vim.fn.has('windows') and vim.fn.executable('nu') then
+	vim.opt.sh = 'nu'
+end
+
 -- other
 vim.opt.termguicolors = true
 
