@@ -396,7 +396,6 @@ local plugins = {
 				ui = 'pum',
 				autoCompleteEvents = {'InsertEnter', 'TextChangedI', 'TextChangedP', 'CmdlineChanged', 'CmdlineEnter', 'TextChangedT'},
 				sources = {
-					'vsnip',
 					'nvim-lsp',
 					'around',
 				},
@@ -407,10 +406,6 @@ local plugins = {
 						sorters = {'sorter_fuzzy', 'sorter_rank'},
 						converters = {'converter_remove_overlap', 'converter_fuzzy'},
 					},
-					["vsnip"] = {
-						mark = '[vsnip]',
-						keywordPattern = "\\S*",
-					},
 					["nvim-lsp"] = {
 						mark = '[LSP]',
 						forceCompletionPattern = {[['\.\w*|:\w*|->\w*']]},
@@ -419,7 +414,6 @@ local plugins = {
 					around = { mark = '[around]' },
 				},
 				sourceParams = {
-					vsnip = { menu = false, },
 					["nvim-lsp"] = {
 						snippetEngine = vim.fn["denops#callback#register"](function(body) vim.fn["vsnip#anonymous"](body) end),
 						enableResolveItem = true,
