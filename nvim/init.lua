@@ -374,6 +374,53 @@ local plugins = {
 	{ "Shougo/ddc-source-nvim-lsp", lazy = true, },
 	{ "Shougo/ddc-converter_remove_overlap", lazy = true, },
 	{
+		"vim-skk/skkeleton",
+		lazy = false,
+		dependencies = {
+			"vim-denops/denops.vim",
+		},
+		event = { 'InsertEnter' },
+		config = function()
+			vim.api.nvim_create_autocmd({ 'User' }, {
+				pattern = { 'skkeleton-initialize-pre' },
+				callback = function()
+					vim.fn["skkeleton#config"]({
+						globalJisyo = '~/.skk/SKK-JISYO.L',
+						eggLikeNewline = true,
+					})
+				end,
+			})
+			vim.api.nvim_create_autocmd({ 'User' }, {
+				pattern = { 'DenopsPluginPost:skkeleton' },
+				callback = function()
+					vim.fn["skkeleton#initialize"]()
+				end,
+			})
+			vim.keymap.set({'i', 'c', 't'}, '<C-j>', [[<Plug>(skkeleton-toggle)]], { noremap = false })
+		end,
+		init = function ()
+			local function skkeleton_enable_pre()
+				vim.g["prev_buffer_config"] = vim.fn["ddc#custom#get_buffer"]()
+				vim.fn["ddc#custom#patch_buffer"]({
+					sources = { "skkeleton" },
+					sourceOptions = {
+						skkeleton = {
+							mark = "skk",
+							matchers = { "skkeleton" },
+							sorters = {},
+							minAutoCompleteLength = 2,
+						},
+					},
+				})
+			end
+
+			local function skkeleton_disable_pre()
+				vim.fn["ddc#custom#set_buffer"](vim.g["prev_buffer_config"])
+			end
+
+		end
+	},
+	{
 		"Shougo/ddc.vim",
 		lazy = false,
 		cond = not vim.g.vscode,
@@ -390,6 +437,7 @@ local plugins = {
 			"Shougo/ddc-sorter_rank",
 			"Shougo/ddc-source-nvim-lsp",
 			"Shougo/ddc-converter_remove_overlap",
+			"vim-skk/skkeleton",
 		},
 		config = function()
 			vim.fn["ddc#custom#patch_global"]({
@@ -397,6 +445,7 @@ local plugins = {
 				autoCompleteEvents = {'InsertEnter', 'TextChangedI', 'TextChangedP', 'CmdlineChanged', 'CmdlineEnter', 'TextChangedT'},
 				sources = {
 					'nvim-lsp',
+					'skkeleton',
 					'around',
 				},
 				backspaceCompletion = true,
@@ -405,10 +454,17 @@ local plugins = {
 						matchers = {'matcher_fuzzy'},
 						sorters = {'sorter_fuzzy', 'sorter_rank'},
 						converters = {'converter_remove_overlap', 'converter_fuzzy'},
+						minAutoCompleteLength = 3,
 					},
 					["nvim-lsp"] = {
 						mark = '[LSP]',
 						forceCompletionPattern = {[['\.\w*|:\w*|->\w*']]},
+						minAutoCompleteLength = 1,
+					},
+					skkeleton = {
+						mark = '[skkeleton]',
+						matchers = {'skkeleton'},
+						sorters = {},
 						minAutoCompleteLength = 2,
 					},
 					around = { mark = '[around]' },
