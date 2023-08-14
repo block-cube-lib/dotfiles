@@ -516,6 +516,7 @@ local plugins = {
 	},
 	{ "Shougo/ddu-source-buffer", lazy = true, },
 	{ "Shougo/ddu-column-filename", lazy = true, },
+	{ "Shougo/ddu-filter-sorter_alpha", lazy = true, },
 	{
 		"Shougo/ddu.vim",
 		lazy = false,
@@ -531,6 +532,7 @@ local plugins = {
 			"Shougo/ddu-source-file_rec",
 			"Shougo/ddu-source-buffer",
 			"Shougo/ddu-column-filename",
+			"Shougo/ddu-filter-sorter_alpha",
 		},
 		config = function()
 			vim.fn["ddu#custom#patch_global"]({
@@ -550,6 +552,7 @@ local plugins = {
 				sourceOptions = {
 					_ = {
 						matchers = { 'matcher_substring' },
+						sorters = { 'sorter_alpha' },
 					}
 				},
 			})
