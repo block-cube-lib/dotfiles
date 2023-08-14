@@ -421,6 +421,16 @@ local plugins = {
 		end
 	},
 	{
+		"delphinus/skkeleton_indicator.nvim",
+		lazy = false,
+		dependencies = {
+			"vim-skk/skkeleton",
+		},
+		config = function ()
+			require("skkeleton_indicator").setup()
+		end
+	},
+	{
 		"Shougo/ddc.vim",
 		lazy = false,
 		cond = not vim.g.vscode,
