@@ -398,27 +398,6 @@ local plugins = {
 			})
 			vim.keymap.set({'i', 'c', 't'}, '<C-j>', [[<Plug>(skkeleton-toggle)]], { noremap = false })
 		end,
-		init = function ()
-			local function skkeleton_enable_pre()
-				vim.g["prev_buffer_config"] = vim.fn["ddc#custom#get_buffer"]()
-				vim.fn["ddc#custom#patch_buffer"]({
-					sources = { "skkeleton" },
-					sourceOptions = {
-						skkeleton = {
-							mark = "skk",
-							matchers = { "skkeleton" },
-							sorters = {},
-							minAutoCompleteLength = 2,
-						},
-					},
-				})
-			end
-
-			local function skkeleton_disable_pre()
-				vim.fn["ddc#custom#set_buffer"](vim.g["prev_buffer_config"])
-			end
-
-		end
 	},
 	{
 		"delphinus/skkeleton_indicator.nvim",
