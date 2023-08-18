@@ -374,6 +374,36 @@ local plugins = {
 	{ "Shougo/ddc-source-nvim-lsp", lazy = true, },
 	{ "Shougo/ddc-converter_remove_overlap", lazy = true, },
 	{
+		"Exafunction/codeium.vim",
+		lazy = true,
+		cond = false,
+		config = function ()
+			vim.g.codeium_disable_bindings = 1
+		end
+	},
+	{
+		"Shougo/ddc-source-codeium",
+		lazy = true,
+		cond = false,
+		dependencies = {
+			"Exafunction/codeium.vim",
+		}
+	},
+	{
+		"github/copilot.vim",
+		lazy = true,
+		config = function ()
+			vim.g.copilot_no_maps = true
+		end
+	},
+	{
+		"Shougo/ddc-source-copilot",
+		lazy = true,
+		dependencies = {
+			"github/copilot.vim",
+		}
+	},
+	{
 		"vim-skk/skkeleton",
 		lazy = false,
 		dependencies = {
@@ -426,6 +456,8 @@ local plugins = {
 			"Shougo/ddc-sorter_rank",
 			"Shougo/ddc-source-nvim-lsp",
 			"Shougo/ddc-converter_remove_overlap",
+			--"Shougo/ddc-source-codeium",
+			"Shougo/ddc-source-copilot",
 			"vim-skk/skkeleton",
 		},
 		config = function()
@@ -433,8 +465,10 @@ local plugins = {
 				ui = 'pum',
 				autoCompleteEvents = {'InsertEnter', 'TextChangedI', 'TextChangedP', 'CmdlineChanged', 'CmdlineEnter', 'TextChangedT'},
 				sources = {
+					'copilot',
 					'nvim-lsp',
 					'skkeleton',
+					--'codeium',
 					'around',
 				},
 				backspaceCompletion = true,
@@ -455,6 +489,26 @@ local plugins = {
 						matchers = {'skkeleton'},
 						sorters = {},
 						minAutoCompleteLength = 2,
+					},
+					["input"] = {
+						mark = '[input]',
+						matchers = {},
+						minAutoCompleteLength = 0,
+						forceCompletionPattern = {[['\S/\S*|\.\w*']]},
+						isVolatile = true,
+					},
+					--codeium = {
+					--	mark = '[codeium]',
+					--	matchers = {},
+					--	minAutoCompleteLength = 0,
+					--	timeout = 1000,
+					--	isVolatile = true,
+					--},
+					copilot = {
+						mark = '[copilot]',
+						matchers = {},
+						minAutoCompleteLength = 0,
+						isVolatile = true,
 					},
 					around = { mark = '[around]' },
 				},
@@ -479,8 +533,9 @@ local plugins = {
 					vim.keymap.set('i', '<C-e>', [[<Cmd>call pum#map#cancel()<CR>]], opt)
 					vim.keymap.set('i', '<PageDown>', [[<Cmd>call pum#map#insert_relative_page(+1)<CR>]], opt)
 					vim.keymap.set('i', '<PageUp>', [[<Cmd>call pum#map#insert_relative_page(-1)<CR>]], opt)
-					vim.keymap.set('i', '<CR>', [[pum#visible() ? pum#map#confirm() : '<CR>']], { expr = true, noremap = false })
-					vim.keymap.set({'i', 's'}, '<C-l>', function() return vim.fn['vsnip#available'](1) == 1 and '<Plug>(vsnip-expand-or-jump)' or '<C-l>' end, { expr = true, noremap = false })
+					vim.keymap.set('i', '<CR>', function() if vim.fn['pum#visible']() then return '<Cmd>call pum#map#confirm()<CR>' or '<CR>' else return '<CR>' end end, { expr = true, noremap = false })
+					vim.keymap.set('i', '<C-m>', function() if vim.fn['pum#visible']() then return '<Cmd>call ddc#map#manual_complete()<CR>' else return '<C-m>' end end, { expr = true, noremap = false })
+					vim.keymap.set({'i', 's'}, '<C-l>', function() return  vim.fn['vsnip#available'](1) == 1 and '<Plug>(vsnip-expand-or-jump)' or '<C-l>' end, { expr = true, noremap = false })
 					vim.keymap.set({'i', 's'}, '<Tab>', function() return vim.fn['vsnip#jumpable'](1) == 1 and '<Plug>(vsnip-jump-next)' or '<Tab>' end, { expr = true, noremap = false })
 					vim.keymap.set({'i', 's'}, '<S-Tab>', function() return vim.fn['vsnip#jumpable'](-1) == 1 and '<Plug>(vsnip-jump-prev)' or '<S-Tab>' end, { expr = true, noremap = false })
 					vim.keymap.set({'n', 's'}, '<s>', [[<Plug>(vsnip-select-text)]], { expr = true, noremap = false })
