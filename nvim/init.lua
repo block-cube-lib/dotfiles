@@ -51,11 +51,6 @@ vim.opt.ignorecase = true
 vim.opt.smartcase = true
 vim.opt.wrapscan = true
 
--- terminal
-if vim.fn.has('windows') and vim.fn.executable('nu') then
-	vim.opt.sh = 'nu'
-end
-
 -- other
 vim.opt.termguicolors = true
 
@@ -394,6 +389,9 @@ local plugins = {
 		lazy = true,
 		config = function ()
 			vim.g.copilot_no_maps = true
+			vim.g.copilot_filetypes = {
+				text = true,
+			}
 		end
 	},
 	{
@@ -527,14 +525,14 @@ local plugins = {
 			vim.api.nvim_create_autocmd('InsertEnter', {
 				callback = function(ev)
 					local opt = { noremap = true }
-					vim.keymap.set('i', '<C-n>', [[(pum#visible() ? '' : ddc#map#manual_complete()) . pum#map#select_relative(+1)]], { expr = true, noremap = false })
-					vim.keymap.set('i', '<C-p>', [[(pum#visible() ? '' : ddc#map#manual_complete()) . pum#map#select_relative(-1)]], { expr = true, noremap = false })
-					vim.keymap.set('i', '<C-y>', [[<Cmd>call pum#map#confirm()<CR>]], opt)
-					vim.keymap.set('i', '<C-e>', [[<Cmd>call pum#map#cancel()<CR>]], opt)
-					vim.keymap.set('i', '<PageDown>', [[<Cmd>call pum#map#insert_relative_page(+1)<CR>]], opt)
-					vim.keymap.set('i', '<PageUp>', [[<Cmd>call pum#map#insert_relative_page(-1)<CR>]], opt)
-					vim.keymap.set('i', '<CR>', function() if vim.fn['pum#visible']() then return '<Cmd>call pum#map#confirm()<CR>' or '<CR>' else return '<CR>' end end, { expr = true, noremap = false })
-					vim.keymap.set('i', '<C-m>', function() if vim.fn['pum#visible']() then return '<Cmd>call ddc#map#manual_complete()<CR>' else return '<C-m>' end end, { expr = true, noremap = false })
+					vim.keymap.set({'i'}, '<C-n>', [[(pum#visible() ? '' : ddc#map#manual_complete()) . pum#map#select_relative(+1)]], { expr = true, noremap = false })
+					vim.keymap.set({'i'}, '<C-p>', [[(pum#visible() ? '' : ddc#map#manual_complete()) . pum#map#select_relative(-1)]], { expr = true, noremap = false })
+					vim.keymap.set({'i'}, '<C-y>', [[<Cmd>call pum#map#confirm()<CR>]], opt)
+					vim.keymap.set({'i'}, '<C-e>', [[<Cmd>call pum#map#cancel()<CR>]], opt)
+					vim.keymap.set({'i'}, '<PageDown>', [[<Cmd>call pum#map#insert_relative_page(+1)<CR>]], opt)
+					vim.keymap.set({'i'}, '<PageUp>', [[<Cmd>call pum#map#insert_relative_page(-1)<CR>]], opt)
+					vim.keymap.set({'i'}, '<CR>', function() if vim.fn['pum#visible']() then return '<Cmd>call pum#map#confirm()<CR>' or '<CR>' else return '<CR>' end end, { expr = true, noremap = false })
+					vim.keymap.set({'i'}, '<C-m>', function() if vim.fn['pum#visible']() then return '<Cmd>call ddc#map#manual_complete()<CR>' else return '<C-m>' end end, { expr = true, noremap = false })
 					vim.keymap.set({'i', 's'}, '<C-l>', function() return  vim.fn['vsnip#available'](1) == 1 and '<Plug>(vsnip-expand-or-jump)' or '<C-l>' end, { expr = true, noremap = false })
 					vim.keymap.set({'i', 's'}, '<Tab>', function() return vim.fn['vsnip#jumpable'](1) == 1 and '<Plug>(vsnip-jump-next)' or '<Tab>' end, { expr = true, noremap = false })
 					vim.keymap.set({'i', 's'}, '<S-Tab>', function() return vim.fn['vsnip#jumpable'](-1) == 1 and '<Plug>(vsnip-jump-prev)' or '<S-Tab>' end, { expr = true, noremap = false })
@@ -543,6 +541,7 @@ local plugins = {
 				end,
 			})
 			vim.g.vsnip_filetypes = {}
+			vim.fn["ddc#enable_terminal_completion"]()
 			vim.fn["ddc#enable"]()
 		end,
 	},
@@ -702,6 +701,20 @@ local plugins = {
 			vim.keymap.set('n', '<Leader>tv', [[<Cmd>Deol -split=vertical<CR>]], { noremap = true, silent = true })
 			vim.keymap.set('n', '<Leader>tr', [[<Cmd>Deol -split=farright<CR>]], { noremap = true, silent = true })
 			vim.keymap.set('n', '<Leader>tl', [[<Cmd>Deol -split=farleft<CR>]], { noremap = true, silent = true })
+
+			vim.g["deol#prompt_pattern"] = "❯ ";
+		end
+	},
+	{
+		'glacambre/firenvim',
+		lazy = false,
+		cond = vim.g.started_by_firenvim,
+		config = function ()
+			vim.g.firenvim_font = 'Cica'
+			vim.o.guifont = 'Cica:h22'
+		end,
+		build = function()
+			vim.fn["firenvim#install"](0)
 		end
 	},
 }

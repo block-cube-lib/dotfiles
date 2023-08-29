@@ -25,6 +25,7 @@
   "denops.vim": { "branch": "main", "commit": "9f1b8cf0d516ee0a0e26f50bdbd935c29a8f4588" },
   "deol.nvim": { "branch": "master", "commit": "8b82f690c65450a391dc16e7567ab0627293701c" },
   "dial.nvim": { "branch": "master", "commit": "c6657df5453a6cbe4e8356e1675e9652cadc332f" },
+  "firenvim": { "branch": "master", "commit": "138424db463e6c0e862a05166a4ccc781cd7c19d" },
   "indent-blankline.nvim": { "branch": "master", "commit": "4541d690816cb99a7fc248f1486aa87f3abce91c" },
   "lazy.nvim": { "branch": "main", "commit": "dac844ed617dda4f9ec85eb88e9629ad2add5e05" },
   "lualine-lsp-progress": { "branch": "master", "commit": "56842d097245a08d77912edf5f2a69ba29f275d7" },
