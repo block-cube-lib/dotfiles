@@ -8,6 +8,8 @@ fish/fishd.*
 # fisher
 fisher/
 
+# GitHub Copilot
+github-copilot/
 
 NuGet/
 configstore/
