@@ -531,7 +531,7 @@ local plugins = {
 					vim.keymap.set({'i'}, '<C-e>', [[<Cmd>call pum#map#cancel()<CR>]], opt)
 					vim.keymap.set({'i'}, '<PageDown>', [[<Cmd>call pum#map#insert_relative_page(+1)<CR>]], opt)
 					vim.keymap.set({'i'}, '<PageUp>', [[<Cmd>call pum#map#insert_relative_page(-1)<CR>]], opt)
-					vim.keymap.set({'i'}, '<CR>', function() if vim.fn['pum#visible']() then return '<Cmd>call pum#map#confirm()<CR>' or '<CR>' else return '<CR>' end end, { expr = true, noremap = false })
+					vim.keymap.set({'i'}, '<CR>', function() if vim.fn['pum#entered']() then return '<Cmd>call pum#map#confirm()<CR>' or '<CR>' else return '<CR>' end end, { expr = true, noremap = false })
 					vim.keymap.set({'i'}, '<C-m>', function() if vim.fn['pum#visible']() then return '<Cmd>call ddc#map#manual_complete()<CR>' else return '<C-m>' end end, { expr = true, noremap = false })
 					vim.keymap.set({'i', 's'}, '<C-l>', function() return  vim.fn['vsnip#available'](1) == 1 and '<Plug>(vsnip-expand-or-jump)' or '<C-l>' end, { expr = true, noremap = false })
 					vim.keymap.set({'i', 's'}, '<Tab>', function() return vim.fn['vsnip#jumpable'](1) == 1 and '<Plug>(vsnip-jump-next)' or '<Tab>' end, { expr = true, noremap = false })
