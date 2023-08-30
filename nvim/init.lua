@@ -463,9 +463,9 @@ local plugins = {
 				ui = 'pum',
 				autoCompleteEvents = {'InsertEnter', 'TextChangedI', 'TextChangedP', 'CmdlineChanged', 'CmdlineEnter', 'TextChangedT'},
 				sources = {
+					'skkeleton',
 					'copilot',
 					'nvim-lsp',
-					'skkeleton',
 					--'codeium',
 					'around',
 				},
