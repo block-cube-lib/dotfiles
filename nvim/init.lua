@@ -65,6 +65,13 @@ if not vim.g.vscode then
 	vim.opt.ambiwidth = 'single'
 end
 
+-- terminal
+if vim.fn.has('win32') == 1 then
+	if vim.fn.executable('nu') == 1 then
+		vim.opt.shell = 'nu'
+	end
+end
+
 ---------------------------------------------------
 -- key map
 ---------------------------------------------------
