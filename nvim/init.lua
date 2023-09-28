@@ -724,6 +724,17 @@ local plugins = {
 			vim.fn["firenvim#install"](0)
 		end
 	},
+	{
+		'lambdalisue/gin.vim',
+		lazy = false,
+		dependencies = {
+			"vim-denops/denops.vim",
+		},
+		init = function()
+			vim.keymap.set('n', '<Leader>gs', [[<Cmd>GinStatus ++opener=vsplit<CR>]], { noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>gb', [[<Cmd>GinBranch ++opener=split<CR>]], { noremap = true, silent = true })
+		end
+	},
 }
 
 ---------------------------------------------------
