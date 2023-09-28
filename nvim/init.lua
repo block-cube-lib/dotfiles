@@ -731,8 +731,16 @@ local plugins = {
 			"vim-denops/denops.vim",
 		},
 		init = function()
-			vim.keymap.set('n', '<Leader>gs', [[<Cmd>GinStatus ++opener=vsplit<CR>]], { noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>gsc', [[<Cmd>GinStatus]], { noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>gsv', [[<Cmd>GinStatus ++opener=vsplit<CR>]], { noremap = true, silent = true })
 			vim.keymap.set('n', '<Leader>gb', [[<Cmd>GinBranch ++opener=split<CR>]], { noremap = true, silent = true })
+			vim.api.nvim_create_autocmd('FileType', {
+				pattern = { 'gin-status' },
+				callback = function(ev)
+					local opt = { noremap = true, silent = true, buffer = ev.buf }
+					vim.keymap.set('n', '<C-r>', [[<Cmd>GinStatus<CR>]], opt)
+				end,
+			})
 		end
 	},
 }
