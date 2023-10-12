@@ -24,13 +24,13 @@ vim.opt.fileencoding = "utf-8"
 
 -- System files
 vim.opt.backup = true
-vim.opt.backupdir = CACHE_HOME..'/nvim/backup'
+vim.opt.backupdir = CACHE_HOME .. '/nvim/backup'
 vim.opt.swapfile = true
-vim.opt.directory = CACHE_HOME..'/nvim/swap'
+vim.opt.directory = CACHE_HOME .. '/nvim/swap'
 vim.opt.backup = true
-vim.opt.backupdir = CACHE_HOME..'/nvim/backup'
+vim.opt.backupdir = CACHE_HOME .. '/nvim/backup'
 vim.opt.undofile = true
-vim.opt.undodir = CACHE_HOME..'/nvim/undo'
+vim.opt.undodir = CACHE_HOME .. '/nvim/undo'
 
 -- Editor
 vim.opt.title = true
@@ -82,8 +82,10 @@ vim.keymap.set('t', '<C-Q>', [[<C-\><C-n>]], { noremap = true, silent = true })
 
 -- vscode
 if vim.g.vscode then
-	vim.keymap.set('n', 'gd', [[<Cmd>call VSCodeCall('editor.action.revealDefinition')<CR>]], { noremap = true, silent = true })
-	vim.keymap.set({'n', 'v'}, '<Leader>r', [[<Cmd>call VSCodeCall('editor.action.rename')<CR>]], { noremap = true, silent = true })
+	vim.keymap.set('n', 'gd', [[<Cmd>call VSCodeCall('editor.action.revealDefinition')<CR>]],
+		{ noremap = true, silent = true })
+	vim.keymap.set({ 'n', 'v' }, '<Leader>r', [[<Cmd>call VSCodeCall('editor.action.rename')<CR>]],
+		{ noremap = true, silent = true })
 end
 
 ---------------------------------------------------
@@ -129,7 +131,7 @@ local plugins = {
 					enable = true,
 				},
 			}
-			end
+		end
 	},
 	{
 		"nvim-treesitter/nvim-treesitter-context",
@@ -162,8 +164,8 @@ local plugins = {
 		opts = {
 			icons_enabled = true,
 			theme = 'auto',
-			component_separators = { left = '', right = ''},
-			section_separators = { left = '', right = ''},
+			component_separators = { left = '', right = '' },
+			section_separators = { left = '', right = '' },
 			disabled_filetypes = {
 				statusline = {},
 				winbar = {},
@@ -177,18 +179,18 @@ local plugins = {
 				winbar = 1000,
 			},
 			sections = {
-				lualine_a = {'mode'},
-				lualine_b = {'branch', 'diff', 'diagnostics'},
-				lualine_c = {{'filename', path = 1}, 'lsp_progress'},
-				lualine_x = {'encoding', 'fileformat', 'filetype'},
-				lualine_y = {'progress'},
-				lualine_z = {'location'}
+				lualine_a = { 'mode' },
+				lualine_b = { 'branch', 'diff', 'diagnostics' },
+				lualine_c = { { 'filename', path = 1 }, 'lsp_progress' },
+				lualine_x = { 'encoding', 'fileformat', 'filetype' },
+				lualine_y = { 'progress' },
+				lualine_z = { 'location' }
 			},
 			inactive_sections = {
 				lualine_a = {},
 				lualine_b = {},
-				lualine_c = {'filename'},
-				lualine_x = {'location'},
+				lualine_c = { 'filename' },
+				lualine_x = { 'location' },
 				lualine_y = {},
 				lualine_z = {}
 			},
@@ -208,15 +210,15 @@ local plugins = {
 			vim.keymap.set("n", "g<C-x>", require("dial.map").dec_gnormal(), { noremap = true })
 			vim.keymap.set("v", "<C-a>", require("dial.map").inc_visual(), { noremap = true })
 			vim.keymap.set("v", "<C-x>", require("dial.map").dec_visual(), { noremap = true })
-			vim.keymap.set("v", "g<C-a>",require("dial.map").inc_gvisual(), { noremap = true })
-			vim.keymap.set("v", "g<C-x>",require("dial.map").dec_gvisual(), { noremap = true })
+			vim.keymap.set("v", "g<C-a>", require("dial.map").inc_gvisual(), { noremap = true })
+			vim.keymap.set("v", "g<C-x>", require("dial.map").dec_gvisual(), { noremap = true })
 		end,
 	},
 	{
 		"mattn/vim-sonictemplate",
 		lazy = false,
 		init = function()
-			vim.g.sonictemplate_vim_template_dir = CONFIG_HOME..'/nvim/templates'
+			vim.g.sonictemplate_vim_template_dir = CONFIG_HOME .. '/nvim/templates'
 		end,
 	},
 	{
@@ -228,14 +230,14 @@ local plugins = {
 		lazy = false,
 		cond = not vim.g.vscode,
 		dependencies = { "vim-denops/denops.vim", },
-		config = function ()
-			vim.keymap.set({'v', 'n'}, "<Leader><Leader>t", "<Cmd>Translate<CR>", { noremap = true, silent = true })
+		config = function()
+			vim.keymap.set({ 'v', 'n' }, "<Leader><Leader>t", "<Cmd>Translate<CR>", { noremap = true, silent = true })
 		end
 	},
 	{
 		"neovim/nvim-lspconfig",
 		cond = not vim.g.vscode,
-		ft = {'rust', 'lua', 'typescript'},
+		ft = { 'rust', 'lua', 'typescript' },
 		config = function()
 			local lspconfig = require('lspconfig')
 
@@ -266,7 +268,7 @@ local plugins = {
 				settings = {
 					Lua = {
 						diagnostics = {
-							globals = {'vim'},
+							globals = { 'vim' },
 						},
 					},
 				},
@@ -358,7 +360,7 @@ local plugins = {
 			vim.fn["signature_help#enable"]()
 		end,
 	},
-	{ "hrsh7th/vim-vsnip", lazy = true, },
+	{ "hrsh7th/vim-vsnip",                   lazy = true, },
 	{
 		"uga-rosa/ddc-source-vsnip",
 		lazy = true,
@@ -368,18 +370,18 @@ local plugins = {
 			"hrsh7th/vim-vsnip",
 		},
 	},
-	{ "tani/ddc-fuzzy", lazy = true, },
-	{ "Shougo/pum.vim", lazy = true, },
-	{ "Shougo/ddc-ui-pum", lazy = true, },
-	{ "Shougo/ddc-source-around", lazy = true, },
-	{ "Shougo/ddc-sorter_rank", lazy = true, },
-	{ "Shougo/ddc-source-nvim-lsp", lazy = true, },
+	{ "tani/ddc-fuzzy",                      lazy = true, },
+	{ "Shougo/pum.vim",                      lazy = true, },
+	{ "Shougo/ddc-ui-pum",                   lazy = true, },
+	{ "Shougo/ddc-source-around",            lazy = true, },
+	{ "Shougo/ddc-sorter_rank",              lazy = true, },
+	{ "Shougo/ddc-source-nvim-lsp",          lazy = true, },
 	{ "Shougo/ddc-converter_remove_overlap", lazy = true, },
 	{
 		"Exafunction/codeium.vim",
 		lazy = true,
 		cond = false,
-		config = function ()
+		config = function()
 			vim.g.codeium_disable_bindings = 1
 		end
 	},
@@ -394,7 +396,7 @@ local plugins = {
 	{
 		"github/copilot.vim",
 		lazy = true,
-		config = function ()
+		config = function()
 			vim.g.copilot_no_maps = true
 			vim.g.copilot_filetypes = {
 				text = true,
@@ -431,7 +433,7 @@ local plugins = {
 					vim.fn["skkeleton#initialize"]()
 				end,
 			})
-			vim.keymap.set({'i', 'c', 't'}, '<C-j>', [[<Plug>(skkeleton-toggle)]], { noremap = false })
+			vim.keymap.set({ 'i', 'c', 't' }, '<C-j>', [[<Plug>(skkeleton-toggle)]], { noremap = false })
 		end,
 	},
 	{
@@ -440,7 +442,7 @@ local plugins = {
 		dependencies = {
 			"vim-skk/skkeleton",
 		},
-		config = function ()
+		config = function()
 			require("skkeleton_indicator").setup()
 		end
 	},
@@ -468,7 +470,8 @@ local plugins = {
 		config = function()
 			vim.fn["ddc#custom#patch_global"]({
 				ui = 'pum',
-				autoCompleteEvents = {'InsertEnter', 'TextChangedI', 'TextChangedP', 'CmdlineChanged', 'CmdlineEnter', 'TextChangedT'},
+				autoCompleteEvents = { 'InsertEnter', 'TextChangedI', 'TextChangedP', 'CmdlineChanged', 'CmdlineEnter',
+					'TextChangedT' },
 				sources = {
 					'skkeleton',
 					'copilot',
@@ -479,19 +482,19 @@ local plugins = {
 				backspaceCompletion = true,
 				sourceOptions = {
 					_ = {
-						matchers = {'matcher_fuzzy'},
-						sorters = {'sorter_fuzzy', 'sorter_rank'},
-						converters = {'converter_remove_overlap', 'converter_fuzzy'},
+						matchers = { 'matcher_fuzzy' },
+						sorters = { 'sorter_fuzzy', 'sorter_rank' },
+						converters = { 'converter_remove_overlap', 'converter_fuzzy' },
 						minAutoCompleteLength = 3,
 					},
 					["nvim-lsp"] = {
 						mark = '[LSP]',
-						forceCompletionPattern = {[['\.\w*|:\w*|->\w*']]},
+						forceCompletionPattern = { [['\.\w*|:\w*|->\w*']] },
 						minAutoCompleteLength = 1,
 					},
 					skkeleton = {
 						mark = '[skkeleton]',
-						matchers = {'skkeleton'},
+						matchers = { 'skkeleton' },
 						sorters = {},
 						minAutoCompleteLength = 2,
 					},
@@ -499,7 +502,7 @@ local plugins = {
 						mark = '[input]',
 						matchers = {},
 						minAutoCompleteLength = 0,
-						forceCompletionPattern = {[['\S/\S*|\.\w*']]},
+						forceCompletionPattern = { [['\S/\S*|\.\w*']] },
 						isVolatile = true,
 					},
 					--codeium = {
@@ -532,19 +535,33 @@ local plugins = {
 			vim.api.nvim_create_autocmd('InsertEnter', {
 				callback = function(ev)
 					local opt = { noremap = true }
-					vim.keymap.set({'i'}, '<C-n>', [[(pum#visible() ? '' : ddc#map#manual_complete()) . pum#map#select_relative(+1)]], { expr = true, noremap = false })
-					vim.keymap.set({'i'}, '<C-p>', [[(pum#visible() ? '' : ddc#map#manual_complete()) . pum#map#select_relative(-1)]], { expr = true, noremap = false })
-					vim.keymap.set({'i'}, '<C-y>', [[<Cmd>call pum#map#confirm()<CR>]], opt)
-					vim.keymap.set({'i'}, '<C-e>', [[<Cmd>call pum#map#cancel()<CR>]], opt)
-					vim.keymap.set({'i'}, '<PageDown>', [[<Cmd>call pum#map#insert_relative_page(+1)<CR>]], opt)
-					vim.keymap.set({'i'}, '<PageUp>', [[<Cmd>call pum#map#insert_relative_page(-1)<CR>]], opt)
-					vim.keymap.set({'i'}, '<CR>', function() if vim.fn['pum#entered']() then return '<Cmd>call pum#map#confirm()<CR>' or '<CR>' else return '<CR>' end end, { expr = true, noremap = false })
-					vim.keymap.set({'i'}, '<C-m>', function() if vim.fn['pum#visible']() then return '<Cmd>call ddc#map#manual_complete()<CR>' else return '<C-m>' end end, { expr = true, noremap = false })
-					vim.keymap.set({'i', 's'}, '<C-l>', function() return  vim.fn['vsnip#available'](1) == 1 and '<Plug>(vsnip-expand-or-jump)' or '<C-l>' end, { expr = true, noremap = false })
-					vim.keymap.set({'i', 's'}, '<Tab>', function() return vim.fn['vsnip#jumpable'](1) == 1 and '<Plug>(vsnip-jump-next)' or '<Tab>' end, { expr = true, noremap = false })
-					vim.keymap.set({'i', 's'}, '<S-Tab>', function() return vim.fn['vsnip#jumpable'](-1) == 1 and '<Plug>(vsnip-jump-prev)' or '<S-Tab>' end, { expr = true, noremap = false })
-					vim.keymap.set({'n', 's'}, '<s>', [[<Plug>(vsnip-select-text)]], { expr = true, noremap = false })
-					vim.keymap.set({'n', 's'}, '<S>', [[<Plug>(vsnip-cut-text)]], { expr = true, noremap = false })
+					vim.keymap.set({ 'i' }, '<C-n>',
+						[[(pum#visible() ? '' : ddc#map#manual_complete()) . pum#map#select_relative(+1)]],
+						{ expr = true, noremap = false })
+					vim.keymap.set({ 'i' }, '<C-p>',
+						[[(pum#visible() ? '' : ddc#map#manual_complete()) . pum#map#select_relative(-1)]],
+						{ expr = true, noremap = false })
+					vim.keymap.set({ 'i' }, '<C-y>', [[<Cmd>call pum#map#confirm()<CR>]], opt)
+					vim.keymap.set({ 'i' }, '<C-e>', [[<Cmd>call pum#map#cancel()<CR>]], opt)
+					vim.keymap.set({ 'i' }, '<PageDown>', [[<Cmd>call pum#map#insert_relative_page(+1)<CR>]], opt)
+					vim.keymap.set({ 'i' }, '<PageUp>', [[<Cmd>call pum#map#insert_relative_page(-1)<CR>]], opt)
+					vim.keymap.set({ 'i' }, '<CR>',
+						function() if vim.fn['pum#entered']() then return '<Cmd>call pum#map#confirm()<CR>' or '<CR>' else return
+								'<CR>' end end, { expr = true, noremap = false })
+					vim.keymap.set({ 'i' }, '<C-m>',
+						function() if vim.fn['pum#visible']() then return '<Cmd>call ddc#map#manual_complete()<CR>' else return
+								'<C-m>' end end, { expr = true, noremap = false })
+					vim.keymap.set({ 'i', 's' }, '<C-l>',
+						function() return vim.fn['vsnip#available'](1) == 1 and '<Plug>(vsnip-expand-or-jump)' or '<C-l>' end,
+						{ expr = true, noremap = false })
+					vim.keymap.set({ 'i', 's' }, '<Tab>',
+						function() return vim.fn['vsnip#jumpable'](1) == 1 and '<Plug>(vsnip-jump-next)' or '<Tab>' end,
+						{ expr = true, noremap = false })
+					vim.keymap.set({ 'i', 's' }, '<S-Tab>',
+						function() return vim.fn['vsnip#jumpable'](-1) == 1 and '<Plug>(vsnip-jump-prev)' or '<S-Tab>' end,
+						{ expr = true, noremap = false })
+					vim.keymap.set({ 'n', 's' }, '<s>', [[<Plug>(vsnip-select-text)]], { expr = true, noremap = false })
+					vim.keymap.set({ 'n', 's' }, '<S>', [[<Plug>(vsnip-cut-text)]], { expr = true, noremap = false })
 				end,
 			})
 			vim.g.vsnip_filetypes = {}
@@ -552,10 +569,10 @@ local plugins = {
 			vim.fn["ddc#enable"]()
 		end,
 	},
-	{ "Shougo/ddu-ui-ff", lazy = true, },
-	{ "Shougo/ddu-ui-filer", lazy = true, },
-	{ "Shougo/ddu-kind-file", lazy = true, },
-	{ "Shougo/ddu-source-file_rec", lazy = true, },
+	{ "Shougo/ddu-ui-ff",                    lazy = true, },
+	{ "Shougo/ddu-ui-filer",                 lazy = true, },
+	{ "Shougo/ddu-kind-file",                lazy = true, },
+	{ "Shougo/ddu-source-file_rec",          lazy = true, },
 	{ "Shougo/ddu-filter-matcher_substring", lazy = true, },
 	{
 		"Shougo/ddu-source-file",
@@ -564,8 +581,8 @@ local plugins = {
 			"Shougo/ddu-kind-file",
 		}
 	},
-	{ "Shougo/ddu-source-buffer", lazy = true, },
-	{ "Shougo/ddu-column-filename", lazy = true, },
+	{ "Shougo/ddu-source-buffer",       lazy = true, },
+	{ "Shougo/ddu-column-filename",     lazy = true, },
 	{ "Shougo/ddu-filter-sorter_alpha", lazy = true, },
 	{
 		"Shougo/ddu.vim",
@@ -634,16 +651,24 @@ local plugins = {
 			vim.api.nvim_create_autocmd('FileType', {
 				pattern = { 'ddu-ff' },
 				callback = function(ev)
-					-- (ddu#ui#get_item()['__sourceName'] == 'buffer') ? 
+					-- (ddu#ui#get_item()['__sourceName'] == 'buffer') ?
 					local opt = { noremap = true, silent = true, buffer = ev.buf }
-					vim.keymap.set('n', '<CR>', [[<Cmd>call ddu#ui#do_action('itemAction')<CR>]], { noremap = true, silent = true })
-					vim.keymap.set('n', 'S', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'open', 'params': {'command': 'split'}})<CR>]], opt)
-					vim.keymap.set('n', 'V', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'open', 'params': {'command': 'vsplit'}})<CR>]], opt)
-					vim.keymap.set('n', 'T', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'open', 'params': {'command': 'tabedit'}})<CR>]], opt)
+					vim.keymap.set('n', '<CR>', [[<Cmd>call ddu#ui#do_action('itemAction')<CR>]],
+						{ noremap = true, silent = true })
+					vim.keymap.set('n', 'S',
+						[[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'open', 'params': {'command': 'split'}})<CR>]],
+						opt)
+					vim.keymap.set('n', 'V',
+						[[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'open', 'params': {'command': 'vsplit'}})<CR>]],
+						opt)
+					vim.keymap.set('n', 'T',
+						[[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'open', 'params': {'command': 'tabedit'}})<CR>]],
+						opt)
 					vim.keymap.set('n', '<Esc>', [[<Cmd>call ddu#ui#do_action('quit')<CR>]], opt)
 					vim.keymap.set('n', 'p', [[<Cmd>call ddu#ui#do_action('preview')<CR>]], opt)
 					vim.keymap.set('n', 'd', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'delete'})<CR>]], opt)
-					vim.keymap.set('n', '<C-l>', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'refresh'})<CR>]], opt)
+					vim.keymap.set('n', '<C-l>', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'refresh'})<CR>]],
+						opt)
 					vim.keymap.set('n', 'i', [[<Cmd>call ddu#ui#do_action('openFilterWindow')<CR>]], opt)
 				end,
 			})
@@ -659,42 +684,62 @@ local plugins = {
 				end,
 			})
 
-			vim.api.nvim_create_autocmd({'TabEnter', 'CursorHold', 'FocusGained'}, {
+			vim.api.nvim_create_autocmd({ 'TabEnter', 'CursorHold', 'FocusGained' }, {
 				command = "call ddu#ui#filer#do_action('checkItems')"
 			})
 			vim.api.nvim_create_autocmd('FileType', {
 				pattern = { 'ddu-filer' },
 				callback = function(ev)
 					local opt = { noremap = true, silent = true, buffer = ev.buf }
-					local crAction = function ()
+					local crAction = function()
 						if vim.fn['ddu#ui#get_item']()['action']['isDirectory'] then
-							vim.fn["ddu#ui#filer#do_action"]('expandItem', {mode = 'toggle'})
+							vim.fn["ddu#ui#filer#do_action"]('expandItem', { mode = 'toggle' })
 						else
-							vim.fn["ddu#ui#filer#do_action"]('itemAction', {name = 'open'})
+							vim.fn["ddu#ui#filer#do_action"]('itemAction', { name = 'open' })
 						end
 					end
 					vim.keymap.set('n', '<CR>', crAction, opt)
-					vim.keymap.set('n', 'o', [[<Cmd>call ddu#ui#filer#do_action('expandItem', {'mode': 'toggle'})<CR>]], opt)
-					vim.keymap.set('n', '<Space>', [[<Cmd>call ddu#ui#filer#do_action('expandItem', {'mode': 'toggle'})<CR>]], opt)
+					vim.keymap.set('n', 'o', [[<Cmd>call ddu#ui#filer#do_action('expandItem', {'mode': 'toggle'})<CR>]],
+						opt)
+					vim.keymap.set('n', '<Space>',
+						[[<Cmd>call ddu#ui#filer#do_action('expandItem', {'mode': 'toggle'})<CR>]], opt)
 					vim.keymap.set('n', '<Esc>', [[<Cmd>call ddu#ui#filer#do_action('quit')<CR>]], opt)
-					vim.keymap.set('n', 'c', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'copy'})<CR>]], opt)
-					vim.keymap.set('n', 'p', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'paste'})<CR>]], opt)
-					vim.keymap.set('n', 'd', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'delete'})<CR>]], opt)
-					vim.keymap.set('n', 'r', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'rename'})<CR>]], opt)
-					vim.keymap.set('n', 'mv', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'move'})<CR>]], opt)
-					vim.keymap.set('n', 't', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'newFile'})<CR>]], opt)
-					vim.keymap.set('n', 'mk', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'newDirectory'})<CR>]], opt)
-					vim.keymap.set('n', 'yy', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'yank'})<CR>]], opt)
-					vim.keymap.set('n', 'S', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'open', 'params': {'command': 'split'}})<CR>]], opt)
-					vim.keymap.set('n', 'V', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'open', 'params': {'command': 'vsplit'}})<CR>]], opt)
-					vim.keymap.set('n', 'T', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'open', 'params': {'command': 'tabedit'}})<CR>]], opt)
+					vim.keymap.set('n', 'c', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'copy'})<CR>]],
+						opt)
+					vim.keymap.set('n', 'p', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'paste'})<CR>]],
+						opt)
+					vim.keymap.set('n', 'd', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'delete'})<CR>]],
+						opt)
+					vim.keymap.set('n', 'r', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'rename'})<CR>]],
+						opt)
+					vim.keymap.set('n', 'mv', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'move'})<CR>]],
+						opt)
+					vim.keymap.set('n', 't', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'newFile'})<CR>]],
+						opt)
+					vim.keymap.set('n', 'mk',
+						[[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'newDirectory'})<CR>]], opt)
+					vim.keymap.set('n', 'yy', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'yank'})<CR>]],
+						opt)
+					vim.keymap.set('n', 'S',
+						[[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'open', 'params': {'command': 'split'}})<CR>]],
+						opt)
+					vim.keymap.set('n', 'V',
+						[[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'open', 'params': {'command': 'vsplit'}})<CR>]],
+						opt)
+					vim.keymap.set('n', 'T',
+						[[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'open', 'params': {'command': 'tabedit'}})<CR>]],
+						opt)
 				end,
 			})
 		end,
 		init = function()
-			vim.keymap.set('n', '<Leader>df', [[<Cmd>call ddu#start({ 'name': 'filer', 'searchPath': expand('%:p'), })<CR>]], { noremap = true, silent = true })
-			vim.keymap.set('n', '<Leader>dF', [[<Cmd>call ddu#start(#{ sources: [#{ name: 'file_rec' }] })<CR>]], { noremap = true, silent = true })
-			vim.keymap.set('n', '<Leader>db', [[<Cmd>call ddu#start(#{ sources: [#{ name: 'buffer' }] })<CR>]], { noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>df',
+				[[<Cmd>call ddu#start({ 'name': 'filer', 'searchPath': expand('%:p'), })<CR>]],
+				{ noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>dF', [[<Cmd>call ddu#start(#{ sources: [#{ name: 'file_rec' }] })<CR>]],
+				{ noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>db', [[<Cmd>call ddu#start(#{ sources: [#{ name: 'buffer' }] })<CR>]],
+				{ noremap = true, silent = true })
 		end,
 	},
 	{
@@ -704,7 +749,8 @@ local plugins = {
 		init = function()
 			vim.keymap.set('n', '<Leader>tt', [[<Cmd>tabnew<CR><Cmd>Deol<CR>]], { noremap = true, silent = true })
 			vim.keymap.set('n', '<Leader>tc', [[<Cmd>Deol<CR>]], { noremap = true, silent = true }) -- current
-			vim.keymap.set('n', '<Leader>tf', [[<Cmd>Deol -split=floating -winheight=30 -winwidth=160<CR>]], { noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>tf', [[<Cmd>Deol -split=floating -winheight=30 -winwidth=160<CR>]],
+				{ noremap = true, silent = true })
 			vim.keymap.set('n', '<Leader>tv', [[<Cmd>Deol -split=vertical<CR>]], { noremap = true, silent = true })
 			vim.keymap.set('n', '<Leader>tr', [[<Cmd>Deol -split=farright<CR>]], { noremap = true, silent = true })
 			vim.keymap.set('n', '<Leader>tl', [[<Cmd>Deol -split=farleft<CR>]], { noremap = true, silent = true })
@@ -716,7 +762,7 @@ local plugins = {
 		'glacambre/firenvim',
 		lazy = false,
 		cond = vim.g.started_by_firenvim,
-		config = function ()
+		config = function()
 			vim.g.firenvim_font = 'Cica'
 			vim.o.guifont = 'Cica:h22'
 		end,
@@ -731,8 +777,8 @@ local plugins = {
 			"vim-denops/denops.vim",
 		},
 		init = function()
-			vim.keymap.set('n', '<Leader>gsc', [[<Cmd>GinStatus]], { noremap = true, silent = true })
-			vim.keymap.set('n', '<Leader>gsv', [[<Cmd>GinStatus ++opener=vsplit<CR>]], { noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>gs', [[<Cmd>GinStatus]], { noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>gS', [[<Cmd>GinStatus ++opener=split<CR>]], { noremap = true, silent = true })
 			vim.keymap.set('n', '<Leader>gb', [[<Cmd>GinBranch ++opener=split<CR>]], { noremap = true, silent = true })
 			vim.api.nvim_create_autocmd('FileType', {
 				pattern = { 'gin-status' },
