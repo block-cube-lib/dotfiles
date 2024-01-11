@@ -103,10 +103,8 @@ local plugins = {
 	{
 		"lukas-reineke/indent-blankline.nvim",
 		lazy = false,
+		main = "ibl",
 		cond = not vim.g.vscode,
-		opts = {
-			show_end_of_line = true,
-		}
 	},
 	{
 		"nvim-treesitter/nvim-treesitter",
@@ -461,7 +459,7 @@ local plugins = {
 			"Shougo/ddc-ui-pum",
 			"Shougo/ddc-source-around",
 			"Shougo/ddc-sorter_rank",
-			"Shougo/ddc-source-nvim-lsp",
+			"Shougo/ddc-source-lsp",
 			"Shougo/ddc-converter_remove_overlap",
 			--"Shougo/ddc-source-codeium",
 			"Shougo/ddc-source-copilot",
@@ -475,7 +473,7 @@ local plugins = {
 				sources = {
 					'skkeleton',
 					'copilot',
-					'nvim-lsp',
+					'lsp',
 					--'codeium',
 					'around',
 				},
@@ -546,11 +544,23 @@ local plugins = {
 					vim.keymap.set({ 'i' }, '<PageDown>', [[<Cmd>call pum#map#insert_relative_page(+1)<CR>]], opt)
 					vim.keymap.set({ 'i' }, '<PageUp>', [[<Cmd>call pum#map#insert_relative_page(-1)<CR>]], opt)
 					vim.keymap.set({ 'i' }, '<CR>',
-						function() if vim.fn['pum#entered']() then return '<Cmd>call pum#map#confirm()<CR>' or '<CR>' else return
-								'<CR>' end end, { expr = true, noremap = false })
+						function()
+							if vim.fn['pum#entered']() then
+								return '<Cmd>call pum#map#confirm()<CR>' or '<CR>'
+							else
+								return
+								'<CR>'
+							end
+						end, { expr = true, noremap = false })
 					vim.keymap.set({ 'i' }, '<C-m>',
-						function() if vim.fn['pum#visible']() then return '<Cmd>call ddc#map#manual_complete()<CR>' else return
-								'<C-m>' end end, { expr = true, noremap = false })
+						function()
+							if vim.fn['pum#visible']() then
+								return '<Cmd>call ddc#map#manual_complete()<CR>'
+							else
+								return
+								'<C-m>'
+							end
+						end, { expr = true, noremap = false })
 					vim.keymap.set({ 'i', 's' }, '<C-l>',
 						function() return vim.fn['vsnip#available'](1) == 1 and '<Plug>(vsnip-expand-or-jump)' or '<C-l>' end,
 						{ expr = true, noremap = false })
@@ -647,6 +657,24 @@ local plugins = {
 					narrow = { quit = false }
 				},
 			})
+			vim.fn["ddu#custom#patch_local"]('file_recursive', {
+				ui = {
+					name = "ff",
+				},
+				sources = {
+					{
+						name = { 'file_rec' },
+						options = {
+						},
+						params = {
+							ignoredDirectories = { "target", ".git", ".vscode", },
+						},
+						kindOptions = {
+							file = { defaultAction = 'open', }
+						},
+					},
+				},
+			})
 
 			vim.api.nvim_create_autocmd('FileType', {
 				pattern = { 'ddu-ff' },
@@ -733,10 +761,19 @@ local plugins = {
 			})
 		end,
 		init = function()
+			-- vim.keymap.set('n', '<Leader>df', [[<Cmd>call ddu#start({ name: 'filer', searchPath: expand('%:p'), })<CR>]],
+			--	{ noremap = true, silent = true })
 			vim.keymap.set('n', '<Leader>df',
-				[[<Cmd>call ddu#start({ 'name': 'filer', 'searchPath': expand('%:p'), })<CR>]],
+				function()
+					local searchPath = string.format("'%s'", vim.fn["expand"]('%:p'))
+					print(searchPath)
+					vim.fn["ddu#start"]({
+						name = 'filer',
+						searchPath = searchPath,
+					})
+				end,
 				{ noremap = true, silent = true })
-			vim.keymap.set('n', '<Leader>dF', [[<Cmd>call ddu#start(#{ sources: [#{ name: 'file_rec' }] })<CR>]],
+			vim.keymap.set('n', '<Leader>dF', [[<Cmd>call ddu#start(#{ name: 'file_recursive' })<CR>]],
 				{ noremap = true, silent = true })
 			vim.keymap.set('n', '<Leader>db', [[<Cmd>call ddu#start(#{ sources: [#{ name: 'buffer' }] })<CR>]],
 				{ noremap = true, silent = true })
@@ -747,15 +784,30 @@ local plugins = {
 		lazy = false,
 		cond = not vim.g.vscode,
 		init = function()
-			vim.keymap.set('n', '<Leader>tt', [[<Cmd>tabnew<CR><Cmd>Deol<CR>]], { noremap = true, silent = true })
-			vim.keymap.set('n', '<Leader>tc', [[<Cmd>Deol<CR>]], { noremap = true, silent = true }) -- current
-			vim.keymap.set('n', '<Leader>tf', [[<Cmd>Deol -split=floating -winheight=30 -winwidth=160<CR>]],
-				{ noremap = true, silent = true })
-			vim.keymap.set('n', '<Leader>tv', [[<Cmd>Deol -split=vertical<CR>]], { noremap = true, silent = true })
-			vim.keymap.set('n', '<Leader>tr', [[<Cmd>Deol -split=farright<CR>]], { noremap = true, silent = true })
-			vim.keymap.set('n', '<Leader>tl', [[<Cmd>Deol -split=farleft<CR>]], { noremap = true, silent = true })
+			local deol_command = function(option)
+				if option == nil then
+					option = {}
+				end
+				option['edit'] = true
+				option['edit_filetype'] = 'deol-edit'
+				return function() vim.fn['deol#start'](option) end
+			end
+			local opt = { noremap = true, silent = true };
+			--vim.keymap.set('n', '<Leader>tt', [[<Cmd>tabnew<CR>]] .. deol_command(), opt)
+			vim.keymap.set('n', '<Leader>tc', deol_command(), opt) -- current
+			vim.keymap.set('n', '<Leader>tf', deol_command({ split = 'floating', winheight = 30, winwidth = 160 }), opt)
+			vim.keymap.set('n', '<Leader>tv', deol_command({ split = 'vertical' }), opt)
+			vim.keymap.set('n', '<Leader>tr', deol_command({ split = 'farright' }), opt)
+			vim.keymap.set('n', '<Leader>tl', deol_command({ split = 'farleft' }), opt)
 
 			vim.g["deol#prompt_pattern"] = "❯ ";
+
+			vim.api.nvim_create_autocmd('FileType', {
+				pattern = { 'deol-edit' },
+				callback = function(ev)
+					vim.keymap.set('i', '<C-Q>', [[<Esc>]], { noremap = true, silent = true })
+				end,
+			})
 		end
 	},
 	{
@@ -777,7 +829,7 @@ local plugins = {
 			"vim-denops/denops.vim",
 		},
 		init = function()
-			vim.keymap.set('n', '<Leader>gs', [[<Cmd>GinStatus]], { noremap = true, silent = true })
+			vim.keymap.set('n', '<Leader>gs', [[<Cmd>GinStatus<CR>]], { noremap = true, silent = true })
 			vim.keymap.set('n', '<Leader>gS', [[<Cmd>GinStatus ++opener=split<CR>]], { noremap = true, silent = true })
 			vim.keymap.set('n', '<Leader>gb', [[<Cmd>GinBranch ++opener=split<CR>]], { noremap = true, silent = true })
 			vim.api.nvim_create_autocmd('FileType', {
