@@ -21,7 +21,7 @@ autocmd({ "BufReadPost" }, {
 -- Encoding
 vim.opt.encoding = "utf-8"
 vim.opt.fileencodings = "cp932,iso-2022-jp,enc-jp,sjis,utf-8"
-vim.opt.fileformats = "unix,dos,mac"
+vim.opt.fileformats = "dos,mac,unix"
 
 -- System files
 vim.opt.backup = true
