@@ -20,7 +20,8 @@ autocmd({ "BufReadPost" }, {
 
 -- Encoding
 vim.opt.encoding = "utf-8"
-vim.opt.fileencoding = "utf-8"
+vim.opt.fileencodings = "cp932,iso-2022-jp,enc-jp,sjis,utf-8"
+vim.opt.fileformats = "unix,dos,mac"
 
 -- System files
 vim.opt.backup = true
@@ -69,6 +70,13 @@ end
 if vim.fn.has('win32') == 1 then
 	if vim.fn.executable('nu') == 1 then
 		vim.opt.shell = 'nu'
+		-- set shell options like a unix shell
+		vim.opt.shellcmdflag = '-c'
+		vim.opt.shellpipe = '| tee'
+		vim.opt.shellquote = ''
+		vim.opt.shellxquote = ''
+		vim.opt.shellredir = '>'
+		vim.opt.shellxescape = ''
 	end
 end
 
@@ -420,7 +428,7 @@ local plugins = {
 				pattern = { 'skkeleton-initialize-pre' },
 				callback = function()
 					vim.fn["skkeleton#config"]({
-						globalJisyo = '~/.skk/SKK-JISYO.L',
+						globalDictionaries = { '~/.skk/SKK-JISYO.L' },
 						eggLikeNewline = true,
 					})
 				end,
@@ -713,7 +721,7 @@ local plugins = {
 			})
 
 			vim.api.nvim_create_autocmd({ 'TabEnter', 'CursorHold', 'FocusGained' }, {
-				command = "call ddu#ui#filer#do_action('checkItems')"
+				command = "call ddu#ui#do_action('checkItems')"
 			})
 			vim.api.nvim_create_autocmd('FileType', {
 				pattern = { 'ddu-filer' },
@@ -721,41 +729,41 @@ local plugins = {
 					local opt = { noremap = true, silent = true, buffer = ev.buf }
 					local crAction = function()
 						if vim.fn['ddu#ui#get_item']()['action']['isDirectory'] then
-							vim.fn["ddu#ui#filer#do_action"]('expandItem', { mode = 'toggle' })
+							vim.fn["ddu#ui#do_action"]('expandItem', { mode = 'toggle' })
 						else
-							vim.fn["ddu#ui#filer#do_action"]('itemAction', { name = 'open' })
+							vim.fn["ddu#ui#do_action"]('itemAction', { name = 'open' })
 						end
 					end
 					vim.keymap.set('n', '<CR>', crAction, opt)
-					vim.keymap.set('n', 'o', [[<Cmd>call ddu#ui#filer#do_action('expandItem', {'mode': 'toggle'})<CR>]],
+					vim.keymap.set('n', 'o', [[<Cmd>call ddu#ui#do_action('expandItem', {'mode': 'toggle'})<CR>]],
 						opt)
 					vim.keymap.set('n', '<Space>',
-						[[<Cmd>call ddu#ui#filer#do_action('expandItem', {'mode': 'toggle'})<CR>]], opt)
-					vim.keymap.set('n', '<Esc>', [[<Cmd>call ddu#ui#filer#do_action('quit')<CR>]], opt)
-					vim.keymap.set('n', 'c', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'copy'})<CR>]],
+						[[<Cmd>call ddu#ui#do_action('expandItem', {'mode': 'toggle'})<CR>]], opt)
+					vim.keymap.set('n', '<Esc>', [[<Cmd>call ddu#ui#do_action('quit')<CR>]], opt)
+					vim.keymap.set('n', 'c', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'copy'})<CR>]],
 						opt)
-					vim.keymap.set('n', 'p', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'paste'})<CR>]],
+					vim.keymap.set('n', 'p', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'paste'})<CR>]],
 						opt)
-					vim.keymap.set('n', 'd', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'delete'})<CR>]],
+					vim.keymap.set('n', 'd', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'delete'})<CR>]],
 						opt)
-					vim.keymap.set('n', 'r', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'rename'})<CR>]],
+					vim.keymap.set('n', 'r', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'rename'})<CR>]],
 						opt)
-					vim.keymap.set('n', 'mv', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'move'})<CR>]],
+					vim.keymap.set('n', 'mv', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'move'})<CR>]],
 						opt)
-					vim.keymap.set('n', 't', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'newFile'})<CR>]],
+					vim.keymap.set('n', 't', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'newFile'})<CR>]],
 						opt)
 					vim.keymap.set('n', 'mk',
-						[[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'newDirectory'})<CR>]], opt)
-					vim.keymap.set('n', 'yy', [[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'yank'})<CR>]],
+						[[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'newDirectory'})<CR>]], opt)
+					vim.keymap.set('n', 'yy', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'yank'})<CR>]],
 						opt)
 					vim.keymap.set('n', 'S',
-						[[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'open', 'params': {'command': 'split'}})<CR>]],
+						[[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'open', 'params': {'command': 'split'}})<CR>]],
 						opt)
 					vim.keymap.set('n', 'V',
-						[[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'open', 'params': {'command': 'vsplit'}})<CR>]],
+						[[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'open', 'params': {'command': 'vsplit'}})<CR>]],
 						opt)
 					vim.keymap.set('n', 'T',
-						[[<Cmd>call ddu#ui#filer#do_action('itemAction', {'name': 'open', 'params': {'command': 'tabedit'}})<CR>]],
+						[[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'open', 'params': {'command': 'tabedit'}})<CR>]],
 						opt)
 				end,
 			})
