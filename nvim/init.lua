@@ -500,9 +500,11 @@ local plugins = {
 					},
 					skkeleton = {
 						mark = '[skkeleton]',
-						matchers = { 'skkeleton' },
+						matchers = {},
 						sorters = {},
-						minAutoCompleteLength = 2,
+						converters = {},
+						isVolatile = true,
+						minAutoCompleteLength = 1,
 					},
 					["input"] = {
 						mark = '[input]',
