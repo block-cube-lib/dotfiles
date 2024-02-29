@@ -454,6 +454,15 @@ local plugins = {
 		end
 	},
 	{
+		"gamoutatsumi/dps-ghosttext.vim",
+		lazy = false,
+		cond = not vim.g.vscode,
+		dependencies = {
+			"vim-denops/denops.vim",
+			"vim-skk/skkeleton",
+		},
+	},
+	{
 		"Shougo/ddc.vim",
 		lazy = false,
 		cond = not vim.g.vscode,
