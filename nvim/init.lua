@@ -419,6 +419,7 @@ local plugins = {
 	{
 		"vim-skk/skkeleton",
 		lazy = false,
+		cond = not vim.g.vscode,
 		dependencies = {
 			"vim-denops/denops.vim",
 		},
