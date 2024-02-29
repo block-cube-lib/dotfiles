@@ -419,6 +419,7 @@ local plugins = {
 	{
 		"vim-skk/skkeleton",
 		lazy = false,
+		cond = not vim.g.vscode,
 		dependencies = {
 			"vim-denops/denops.vim",
 		},
@@ -451,6 +452,15 @@ local plugins = {
 		config = function()
 			require("skkeleton_indicator").setup()
 		end
+	},
+	{
+		"gamoutatsumi/dps-ghosttext.vim",
+		lazy = false,
+		cond = not vim.g.vscode,
+		dependencies = {
+			"vim-denops/denops.vim",
+			"vim-skk/skkeleton",
+		},
 	},
 	{
 		"Shougo/ddc.vim",
