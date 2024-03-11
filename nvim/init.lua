@@ -105,7 +105,7 @@ local plugins = {
 		lazy = false,
 		priority = 1000,
 		config = function()
-			vim.cmd([[colorscheme tokyonight]])
+			vim.cmd([[colorscheme tokyonight-night]])
 		end,
 	},
 	{
@@ -243,12 +243,14 @@ local plugins = {
 	{
 		"neovim/nvim-lspconfig",
 		cond = not vim.g.vscode,
-		ft = { 'rust', 'lua', 'typescript' },
+		ft = { 'cs', 'rust', 'lua', 'typescript' },
 		config = function()
 			local lspconfig = require('lspconfig')
 
 			local capabilities = vim.lsp.protocol.make_client_capabilities()
 			capabilities.textDocument.completion.completionItem.snippetSupport = true
+			lspconfig.csharp_ls.setup {
+			}
 			lspconfig.rust_analyzer.setup {
 				capabilities = capabilities,
 				settings = {
