@@ -34,22 +34,22 @@ export class Config extends BaseConfig {
 
   const[context, options] = await args.contextBuilder.get(args.denops);
 
-  // Load toml plugins
-  const tomls: Toml[] = [];
-  const toml = await args.dpp.extAction(
-    args.denops,
-    context,
-    options,
-    "toml",
-    "load",
-    {
-      path: "$XDG_CONFIG_HOME/nvim/dpp.toml",
-      options: {
-        lazy: false,
-      },
+// Load toml plugins
+const tomls: Toml[] = [];
+const toml = await args.dpp.extAction(
+  args.denops,
+  context,
+  options,
+  "toml",
+  "load",
+  {
+    path: "$XDG_CONFIG_HOME/nvim/dpp.toml",
+    options: {
+      lazy: false,
     },
-  ) as Toml | undefined;
-  if (toml) {
-    tomls.push();
-  }
+  },
+) as Toml | undefined;
+if (toml) {
+  tomls.push();
+}
 }

@@ -307,6 +307,7 @@ return
 	{
 		"github/copilot.vim",
 		lazy = true,
+		cond = not vim.g.vscode,
 		config = function()
 			vim.g.copilot_no_maps = true
 			vim.g.copilot_filetypes = {
