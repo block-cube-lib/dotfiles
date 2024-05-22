@@ -1,0 +1,100 @@
+[[plugins]]
+repo = 'Shougo/ddc.vim'
+depends = [
+        'denops.vim',
+        'ddc-ui-pum',
+        'skkeleton',
+        'ddc-source-copilot',
+        'ddc-source-vsnip',
+        'ddc-source-around',
+        'ddc-source-lsp',
+        'vim-vsnip',
+        'ddc-fuzzy',
+        'ddc-sorter_rank',
+        'ddc-converter_remove_overlap',
+        'denops-popup-preview.vim',
+        'denops-signature_help',
+]
+on_event = 'InsertEnter'
+hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/ddc.lua'
+
+[[plugins]]
+repo = 'Shougo/pum.vim'
+
+[[plugins]]
+repo = 'Shougo/ddc-ui-pum'
+depends = ['pum.vim']
+
+[[plugins]]
+repo = 'tani/ddc-fuzzy'
+on_event = 'InsertEnter'
+
+[[plugins]]
+repo = 'Shougo/ddc-sorter_rank'
+on_event = 'InsertEnter'
+
+[[plugins]]
+repo = 'Shougo/ddc-converter_remove_overlap'
+on_event = 'InsertEnter'
+
+[[plugins]]
+repo = 'hrsh7th/vim-vsnip'
+lua_add = '''
+vim.g.vsnip_filetypes = {
+        vimspec = 'vim'
+}
+'''
+
+[[plugins]]
+repo = 'uga-rosa/ddc-source-vsnip'
+depends = [
+        'denops.vim',
+        'vim-vsnip',
+]
+on_event = 'InsertEnter'
+
+[[plugins]]
+repo = 'Shougo/ddc-source-around'
+on_event = 'InsertEnter'
+
+[[plugins]]
+repo = 'Shougo/ddc-source-nvim-lsp'
+on_event = 'InsertEnter'
+
+[[plugins]]
+repo = 'github/copilot.vim'
+on_event = 'InsertEnter'
+lua_add = '''
+vim.g.copilot_no_maps = true
+vim.g.copilot_filetypes = { text = true, }
+'''
+
+[[plugins]]
+repo = 'Shougo/ddc-source-copilot'
+on_event = 'InsertEnter'
+depends = ['copilot.vim']
+
+[[plugins]]
+repo = 'Shougo/ddc-source-lsp'
+on_event = 'InsertEnter'
+
+[[plugins]]
+repo = 'matsui54/denops-popup-preview.vim'
+depends = ['denops.vim']
+lua_source = '''
+vim.fn["popup_preview#enable"]()
+'''
+
+[[plugins]]
+repo = 'matsui54/denops-signature_help'
+depends = ['denops.vim']
+lua_add = '''
+vim.g.signature_help_config = {
+        contentsStyle = "full",
+        viewStyle = "floating",
+}
+'''
+lua_source = '''
+vim.fn["signature_help#enable"]()
+'''
+

@@ -1,5 +1,6 @@
 local function gitClone(repo, branch, dest)
 	if not vim.loop.fs_stat(dest) then
+		vim.notify("clone " .. repo)
 		vim.fn.system({
 			"git",
 			"clone",
@@ -14,10 +15,10 @@ end
 return function()
 	CONFIG_HOME = os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")
 	CACHE_HOME = os.getenv("XDG_CACHE_HOME") or (os.getenv("HOME") .. "/.cache")
-	local dppBase = CACHE_HOME .. "/dpp/"
-	local dppSrc = dppBase .. "repos/github.com/Shougo/dpp.vim"
-	local denopsSrc = dppBase .. "repos/github.com/vim-denops/denops.vim"
-	local denopsInstaller = CACHE_HOME .. "repos/github.com/Shougo/dpp-ext-installer"
+	local dppBase = CACHE_HOME .. "/dpp"
+	local dppSrc = dppBase .. "/repos/github.com/Shougo/dpp.vim"
+	local denopsSrc = dppBase .. "/repos/github.com/vim-denops/denops.vim"
+	local denopsInstaller = CACHE_HOME .. "/repos/github.com/Shougo/dpp-ext-installer"
 
 	gitClone("https://github.com/Shougo/dpp.vim", "main", dppSrc)
 	gitClone("https://github.com/vim-denops/denops.vim", "main", denopsSrc)
@@ -30,7 +31,7 @@ return function()
 		"Shougo/dpp-ext-toml",
 	}
 	for _, plugin in ipairs(dppExtends) do
-		local dest = dppBase .. "repos/github.com/" .. plugin
+		local dest = dppBase .. "/repos/github.com/" .. plugin
 		gitClone("https://github.com/" .. plugin, "main", dest)
 		vim.opt.runtimepath:append(dest)
 	end
@@ -55,4 +56,7 @@ return function()
 
 	vim.cmd("filetype indent plugin on")
 	vim.cmd("syntax on")
+
+	vim.api.nvim_create_user_command('DppInstall', "call dpp#async_ext_action('installer', 'install')", {})
+	vim.api.nvim_create_user_command('DppUpdate', "call dpp#async_ext_action('installer', 'update')", {})
 end

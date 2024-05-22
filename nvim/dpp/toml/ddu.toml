@@ -1,0 +1,44 @@
+[[plugins]]
+repo = 'Shougo/ddu-ui-ff'
+
+[[plugins]]
+repo = 'Shougo/ddu-ui-filer'
+
+[[plugins]]
+repo = 'Shougo/ddu-kind-file'
+
+[[plugins]]
+repo = 'Shougo/ddu-source-file_rec'
+
+[[plugins]]
+repo = 'Shougo/ddu-filter-matcher_substring'
+
+[[plugins]]
+repo = 'Shougo/ddu-source-file'
+depends = 'ddu-kind-file'
+
+[[plugins]]
+repo = 'Shougo/ddu-source-buffer'
+
+[[plugins]]
+repo = 'Shougo/ddu-column-filename'
+
+[[plugins]]
+repo = 'Shougo/ddu-filter-sorter_alpha'
+
+[[plugins]]
+repo = 'Shougo/ddu.vim'
+depends = [
+        'denops.vim',
+        'ddu.vim',
+        'ddu-ui-ff',
+        'ddu-ui-filer',
+        'ddu-kind-file',
+        'ddu-filter-matcher_substring',
+        'ddu-source-file',
+        'ddu-source-file_rec',
+        'ddu-source-buffer',
+        'ddu-column-filename',
+        'ddu-filter-sorter_alpha',
+]
+hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/ddu.lua'

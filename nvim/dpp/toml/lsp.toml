@@ -1,0 +1,4 @@
+[[plugins]]
+repo = 'neovim/nvim-lspconfig'
+on_ft = ['cs', 'rust', 'lua', 'typescript']
+hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/nvim-lspconfig.lua'

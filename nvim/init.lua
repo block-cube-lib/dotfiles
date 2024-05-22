@@ -21,7 +21,7 @@ autocmd({ "BufReadPost" }, {
 -- Encoding
 vim.opt.encoding = "utf-8"
 vim.opt.fileencodings = "utf-8"
-vim.opt.fileformats = "dos,mac,unix"
+vim.opt.fileformats = "unix,dos,mac"
 
 -- System files
 vim.opt.backup = true
@@ -62,6 +62,8 @@ vim.opt.laststatus = 2
 vim.opt.showcmd = true
 vim.opt.wildmenu = true
 
+vim.diagnostic.config({ severity_sort = true })
+
 if not vim.g.vscode then
 	vim.opt.ambiwidth = 'single'
 end
@@ -99,5 +101,8 @@ end
 ---------------------------------------------------
 -- plugins
 ---------------------------------------------------
---require("dpp_setup")()
-require("lazy_setup")()
+if vim.g.vscode then
+	return
+end
+require("dpp_setup")()
+--require("lazy_setup")()

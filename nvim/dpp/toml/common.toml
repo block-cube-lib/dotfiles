@@ -1,0 +1,35 @@
+[[plugins]]
+repo = 'nvim-treesitter/nvim-treesitter'
+hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/nvim-treesitter.lua'
+
+[[plugins]]
+repo = 'monaqa/dial.nvim'
+hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/dial.lua'
+
+[[plugins]]
+repo = 'mattn/vim-sonictemplate'
+lua_source = '''
+vim.g.sonictemplate_vim_template_dir = {
+        os.getenv('XDG_CONFIG_HOME') .. '/nvim/templates',
+        os.getenv('HOME') .. '/nvim_templates',
+}
+'''
+
+[[plugins]]
+repo = 'lambdalisue/gin.vim'
+depends = ['denops.vim']
+hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/gin.lua'
+
+[[plugins]]
+repo = 'nvim-tree/nvim-web-devicons'
+
+[[plugins]]
+repo = 'arkav/lualine-lsp-progress'
+
+[[plugins]]
+repo = 'nvim-lualine/lualine.nvim'
+depends = [
+        'nvim-web-devicons',
+        'lualine-lsp-progress',
+]
+hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/lualine.lua'

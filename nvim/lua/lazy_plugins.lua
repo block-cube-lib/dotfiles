@@ -127,7 +127,10 @@ return
 		"mattn/vim-sonictemplate",
 		lazy = false,
 		init = function()
-			vim.g.sonictemplate_vim_template_dir = CONFIG_HOME .. '/nvim/templates'
+			vim.g.sonictemplate_vim_template_dir = {
+					CONFIG_HOME .. '/nvim/templates',
+					os.getenv("HOME") .. '/nvim_templates',
+				}
 		end,
 	},
 	{
@@ -271,7 +274,7 @@ return
 			vim.fn["signature_help#enable"]()
 		end,
 	},
-	{ "hrsh7th/vim-vsnip",                   lazy = true, },
+	{ "hrsh7th/vim-vsnip", lazy = true, },
 	{
 		"uga-rosa/ddc-source-vsnip",
 		lazy = true,
@@ -281,13 +284,37 @@ return
 			"hrsh7th/vim-vsnip",
 		},
 	},
-	{ "tani/ddc-fuzzy",                      lazy = true, },
-	{ "Shougo/pum.vim",                      lazy = true, },
-	{ "Shougo/ddc-ui-pum",                   lazy = true, },
-	{ "Shougo/ddc-source-around",            lazy = true, },
-	{ "Shougo/ddc-sorter_rank",              lazy = true, },
-	{ "Shougo/ddc-source-nvim-lsp",          lazy = true, },
-	{ "Shougo/ddc-converter_remove_overlap", lazy = true, },
+	{ "tani/ddc-fuzzy",    lazy = true, },
+	{
+		"Shougo/pum.vim",
+		lazy = true,
+		cond = not vim.g.vscode,
+	},
+	{
+		"Shougo/ddc-ui-pum",
+		lazy = true,
+		cond = not vim.g.vscode,
+	},
+	{
+		"Shougo/ddc-source-around",
+		lazy = true,
+		cond = not vim.g.vscode,
+	},
+	{
+		"Shougo/ddc-sorter_rank",
+		lazy = true,
+		cond = not vim.g.vscode,
+	},
+	{
+		"Shougo/ddc-source-nvim-lsp",
+		lazy = true,
+		cond = not vim.g.vscode,
+	},
+	{
+		"Shougo/ddc-converter_remove_overlap",
+		lazy = true,
+		cond = not vim.g.vscode,
+	},
 	{
 		"Exafunction/codeium.vim",
 		lazy = true,
@@ -723,7 +750,8 @@ return
 			local opt = { noremap = true, silent = true };
 			-- vim.keymap.set('n', '<Leader>tt', [[<Cmd>tabnew<CR>]] .. deol_command(), opt)
 			vim.keymap.set('n', '<Leader>tc', deol_command(), opt) -- current
-			vim.keymap.set('n', '<Leader>tf', deol_command({ split = 'floating', edit = false, winheight = 30, winwidth = 160 }), opt)
+			vim.keymap.set('n', '<Leader>tf',
+				deol_command({ split = 'floating', edit = false, winheight = 30, winwidth = 160 }), opt)
 			vim.keymap.set('n', '<Leader>tv', deol_command({ split = 'vertical' }), opt)
 			vim.keymap.set('n', '<Leader>tr', deol_command({ split = 'farright' }), opt)
 			vim.keymap.set('n', '<Leader>tl', deol_command({ split = 'farleft' }), opt)

@@ -1,0 +1,29 @@
+[[plugins]]
+repo = 'folke/tokyonight.nvim'
+on_event = 'VimEnter'
+hook_post_source = '''
+colorscheme tokyonight-night
+'''
+
+[[plugins]]
+repo = 'Shougo/deol.nvim'
+on_event = 'VimEnter'
+hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/deol.lua'
+
+[[plugins]]
+repo = 'skk-dev/dict'
+name = 'skk-dict'
+
+[[plugins]]
+repo = 'vim-skk/skkeleton'
+on_event = 'InsertEnter'
+depends = ['denops.vim', 'skk-dict']
+hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/skkeleton.lua'
+
+[[plugins]]
+repo = 'delphinus/skkeleton_indicator.nvim'
+on_event = 'InsertEnter'
+depends = ['skkeleton']
+lua_source = '''
+require("skkeleton_indicator").setup()
+'''
