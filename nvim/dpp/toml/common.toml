@@ -33,3 +33,12 @@ depends = [
         'lualine-lsp-progress',
 ]
 hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/lualine.lua'
+
+[[plugins]]
+repo = 'lukas-reineke/indent-blankline.nvim'
+lua_source = '''
+require("ibl").setup()
+'''
+
+[[plugins]]
+repo = 'machakann/vim-sandwich'

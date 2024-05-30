@@ -58,5 +58,12 @@ return function()
 	vim.cmd("syntax on")
 
 	vim.api.nvim_create_user_command('DppInstall', "call dpp#async_ext_action('installer', 'install')", {})
-	vim.api.nvim_create_user_command('DppUpdate', "call dpp#async_ext_action('installer', 'update')", {})
+	vim.api.nvim_create_user_command(
+		'DppUpdate', 
+		function(opts)
+			local args = opts.fargs
+			vim.fn['dpp#async_ext_action']('installer', 'update', { names = args })
+		end, 
+		{ nargs = '*' }
+	)
 end
