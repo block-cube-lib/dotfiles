@@ -2,6 +2,13 @@
 vim.opt.runtimepath:append('$XDG_CACHE_HOME/treesitter/parsers')
 -- }}}
 -- lua_source {{{
+vim.treesitter.start = (function(wrapped)
+	return function(bufnr, lang)
+		lang = lang or vim.fn.getbufvar(bufnr or '', '&filetype')
+		pcall(wrapped, bufnr, lang)
+	end
+end)(vim.treesitter.start)
+
 require('nvim-treesitter.configs').setup {
 	parser_install_dir = '$XDG_CACHE_HOME/treesitter/parsers',
 	sync_install = false,

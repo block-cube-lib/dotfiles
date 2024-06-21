@@ -4,14 +4,17 @@ import {
   Dpp,
   Plugin,
 } from "https://deno.land/x/dpp_vim@v0.2.0/types.ts";
-import { Denops, fn, vars } from "https://deno.land/x/dpp_vim@v0.2.0/deps.ts";
-
-const { globals } = vars;
+import { Denops } from "https://deno.land/x/dpp_vim@v0.2.0/deps.ts";
 
 type Toml = {
   ftplugins?: Record<string, string>;
   hooks_file?: string;
   plugins?: Plugin[];
+}
+
+type TomlLoadSetting = {
+  path: string,
+  lazy: boolean,
 }
 
 type LazyMakeStateResult = {
@@ -39,7 +42,7 @@ export class Config extends BaseConfig {
     const toml_dir = "$XDG_CONFIG_HOME/nvim/dpp/toml"
     const tomls: Toml[] = [];
 
-    const toml_load_settings: [{ readonly path: string, readonly lazy: bool }] = [
+    const toml_load_settings: TomlLoadSetting[] = [
       { path: `${toml_dir}/dpp.toml`, lazy: false, },
       { path: `${toml_dir}/common.toml`, lazy: false, },
       { path: `${toml_dir}/lazy.toml`, lazy: true, },
@@ -48,7 +51,7 @@ export class Config extends BaseConfig {
       { path: `${toml_dir}/ddc.toml`, lazy: true, },
     ];
 
-    for (let {path, lazy} of toml_load_settings) {
+    for (const {path, lazy} of toml_load_settings) {
       console.log(`load ${path}`);
       const toml = await args.dpp.extAction(
         args.denops,

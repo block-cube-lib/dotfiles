@@ -16,6 +16,19 @@ vim.keymap.set('n', '<Leader>db', [[<Cmd>call ddu#start(#{ sources: [#{ name: 'b
 -- }}}
 
 -- lua_source {{{
+function is_unity_dir() 
+	local assembly_csproj = vim.fn.globpath(vim.fn.getcwd(), 'Assembly-CSharp.csproj')
+	return assembly_csproj ~= ''
+end
+
+local ignore_directories = { 'target', '.git', '.vscode' }
+
+if is_unity_dir() then
+	table.insert(ignore_directories, 'Library')
+	table.insert(ignore_directories, 'Logs')
+	table.insert(ignore_directories, 'Temp')
+end
+
 vim.fn["ddu#custom#patch_global"]({
 	ui = 'ff',
 	sources = {
@@ -34,7 +47,7 @@ vim.fn["ddu#custom#patch_global"]({
 		_ = {
 			matchers = { 'matcher_substring' },
 			sorters = { 'sorter_alpha' },
-		}
+		},
 	},
 })
 vim.fn["ddu#custom#patch_local"]('filer', {
@@ -71,13 +84,13 @@ vim.fn["ddu#custom#patch_local"]('file_recursive', {
 			options = {
 			},
 			params = {
-				ignoredDirectories = { "target", ".git", ".vscode", },
+				ignoredDirectories = ignore_directories,
 			},
 			kindOptions = {
 				file = { defaultAction = 'open', }
 			},
 		},
-	},
+	}
 })
 
 vim.api.nvim_create_autocmd('FileType', {
