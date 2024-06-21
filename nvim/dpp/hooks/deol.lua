@@ -7,7 +7,13 @@ local deol_command = function(option)
 		option['edit'] = true
 	end
 	option['edit_filetype'] = 'deol-edit'
-	return function() vim.fn['deol#start'](option) end
+	option['prompt_pattern'] = '> '
+	return function()
+		vim.fn['deol#start'](option)
+		vim.fn['deol#set_option']('extra_term_options', {
+			term_finish= 'close',
+		})
+	end
 end
 local opt = { noremap = true, silent = true };
 -- vim.keymap.set('n', '<Leader>tt', [[<Cmd>tabnew<CR>]] .. deol_command(), opt)
@@ -18,15 +24,14 @@ vim.keymap.set('n', '<Leader>tv', deol_command({ split = 'vertical' }), opt)
 vim.keymap.set('n', '<Leader>tr', deol_command({ split = 'farright' }), opt)
 vim.keymap.set('n', '<Leader>tl', deol_command({ split = 'farleft' }), opt)
 
-vim.g["deol#prompt_pattern"] = ">";
 vim.g["deol#extra_options"] = { term_finish = 'close' }
 
 vim.api.nvim_create_autocmd('FileType', {
 	pattern = { 'deol' },
 	callback = function()
 		local opt = { noremap = true, buffer = true, silent = true };
-		vim.keymap.set('n', '<C-n>', [[<Plug>(deol_next_prompt]], opt)
-		vim.keymap.set('n', '<C-p>', [[<Plug>(deol_previous_prompt)]], opt)
+		vim.keymap.set('i', '<C-n>', [[<Plug>(deol_next_prompt]], opt)
+		vim.keymap.set('i', '<C-p>', [[<Plug>(deol_previous_prompt)]], opt)
 		vim.keymap.set('n', '<CR>', [[<Plug>(deol_execute_line)]], opt)
 		vim.keymap.set('n', 'A', [[<Plug>(deol_start_append_last)]], opt)
 		vim.keymap.set('n', 'I', [[<Plug>(deol_start_insert_first)]], opt)
