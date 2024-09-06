@@ -49,13 +49,14 @@ lspconfig.denols.setup {
 					["https://deno.land"] = true,
 					["https://cdn.nest.land"] = true,
 					["https://crux.land"] = true,
+					["https://jsr.io"] = true,
 				},
 			},
 		},
 	},
 	single_file_support = true,
 }
-lspconfig.tsserver.setup {
+lspconfig.ts_ls.setup {
 	root_dir = lspconfig.util.root_pattern('package.json'),
 	single_file_support = false,
 	capabilities = capabilities,
