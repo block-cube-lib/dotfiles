@@ -42,3 +42,15 @@ require("ibl").setup()
 
 [[plugins]]
 repo = 'machakann/vim-sandwich'
+
+[[plugins]]
+repo = 'nvim-lua/plenary.nvim'
+
+[[plugins]]
+repo = 'MunifTanjim/nui.nvim'
+
+[[plugins]]
+repo = 'nvim-neo-tree/neo-tree.nvim'
+branch = 'v3.x'
+dependencies = ['plenary.nvim', 'nvim-web-devicons', 'nui.nvim']
+hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/neo-tree.lua'
