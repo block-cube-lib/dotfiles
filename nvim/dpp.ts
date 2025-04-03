@@ -13,8 +13,8 @@ type Toml = {
 }
 
 type TomlLoadSetting = {
-  path: string,
-  lazy: boolean,
+  path: string;
+  lazy: boolean;
 }
 
 type LazyMakeStateResult = {
@@ -77,7 +77,7 @@ export class Config extends BaseConfig {
     const hooks_files: string[] = [];
 
     tomls.forEach((toml) => {
-      for (const plugin of toml.plugins) {
+      for (const plugin of toml.plugins ?? []) {
         record_plugins[plugin.name] = plugin;
       }
       if (toml.ftplugins) {
@@ -104,7 +104,7 @@ export class Config extends BaseConfig {
       {
         plugins: Object.values(record_plugins),
       },
-    ) as LazyMakeStateResult;
+    ) as LazyMakeStateResult | undefined;
 
     console.log(lazy_result);
 
