@@ -95,7 +95,7 @@ vim.api.nvim_create_autocmd('LspAttach', {
 		vim.keymap.set({ 'n', 'v' }, '<Leader>ca', vim.lsp.buf.code_action, opts)
 		vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
 		vim.keymap.set('n', '<Leader>f', function()
-			vim.lsp.buf.format { async = true }
+			vim.lsp.buf.format({ timeout_ms = 2000 })
 		end, opts)
 	end,
 })
