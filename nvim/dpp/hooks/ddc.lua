@@ -57,7 +57,7 @@ vim.fn["ddc#custom#patch_filetype"]('markdown', 'sourceParams', {
 	around = { maxSize = 50 }
 })
 vim.api.nvim_create_autocmd('InsertEnter', {
-	callback = function(ev)
+	callback = function(_)
 		local opt = { noremap = true }
 		vim.keymap.set({ 'i' }, '<C-n>',
 			[[(pum#visible() ? '' : ddc#map#manual_complete()) . pum#map#select_relative(+1)]],
