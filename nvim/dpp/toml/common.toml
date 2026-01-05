@@ -54,3 +54,15 @@ repo = 'nvim-neo-tree/neo-tree.nvim'
 branch = 'v3.x'
 depends = ['plenary.nvim', 'nvim-web-devicons', 'nui.nvim']
 hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/neo-tree.lua'
+
+[[plugins]]
+repo = 'preservim/vim-markdown'
+ft = 'markdown'
+lua_source = '''
+vim.g.vim_markdown_folding_disabled = 1
+'''
+
+[[plugins]]
+repo = 'nwiizo/marp.nvim'
+ft = 'markdown'
+hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/marp.lua'
