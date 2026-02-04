@@ -31,6 +31,7 @@ vim.opt.backup = true
 vim.opt.backupdir = CACHE_HOME .. '/nvim/backup'
 vim.opt.undofile = true
 vim.opt.undodir = CACHE_HOME .. '/nvim/undo'
+vim.opt.winblend = 0
 
 -- Editor
 vim.opt.title = true
