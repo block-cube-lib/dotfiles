@@ -1,5 +1,10 @@
 -- lua_add {{{
 vim.opt.runtimepath:append(vim.fn.expand('$XDG_CACHE_HOME/treesitter/parsers'))
+
+local ts_dir = vim.fn.expand('$XDG_CACHE_HOME/dpp/repos/github.com/nvim-treesitter/nvim-treesitter')
+if vim.fn.isdirectory(ts_dir .. '/runtime') == 1 then
+  vim.opt.runtimepath:append(ts_dir .. '/runtime')
+end
 -- }}}
 -- lua_source {{{
 local ts = require('nvim-treesitter')
