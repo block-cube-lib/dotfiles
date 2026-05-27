@@ -2,7 +2,7 @@ return function()
 	local git = require("git")
 
 	CACHE_HOME = os.getenv("XDG_CACHE_HOME") or (os.getenv("HOME") .. "/.cache")
-	local cache_dir = CACHE_HOME .. "vscode-neovim/plugins"
+	local cache_dir = CACHE_HOME .. "/vscode-neovim/plugins"
 
 	local plugins = {
 		{ path = "vim-denops/denops.vim", branch = "main" },
@@ -21,12 +21,11 @@ return function()
 	-- 		local cache_home = os.getenv('XDG_CACHE_HOME')
 	-- 		local dict_dir = cache_home .. '/dpp/repos/github.com/skk-dev/dict'
 	-- 		vim.fn["skkeleton#config"]({
-	-- 			globalDictionaries = { 
+	-- 			globalDictionaries = {
 	-- 				dict_dir .. '/SKK-JISYO.L',
 	-- 				dict_dir .. '/SKK-JISYO.emoji',
 	-- 			},
 	-- 			eggLikeNewline = true,
-	-- 			debug = true,
 	-- 		})
 	-- 	end,
 	-- })
@@ -51,6 +50,4 @@ return function()
 	-- 	end,
 	-- })
 	-- vim.keymap.set({ 'i', 'c', 't' }, '<C-j>', [[<Plug>(skkeleton-toggle)]], { noremap = false, silent = true })
-	-- vim.keymap.set({ 'i', 'c', 't' }, '<C-k>', [[<Cmd>echo "hoge"<CR>]], { noremap = false, silent = true })
-	-- vim.keymap.set({ 'i', 'c', 't' }, '<C-l>', [[<Plug>(skkeleton-disable)]], { noremap = false, silent = true })
 end
