@@ -4,6 +4,15 @@ on_event = 'VimEnter'
 hook_post_source = '''
 colorscheme tokyonight-night
 '''
+lua_source = '''
+require("tokyonight").setup({
+transparent = true,
+    styles = {
+        sidebars = "transparent",
+        floats = "transparent",
+    },
+})
+'''
 
 [[plugins]]
 repo = 'Shougo/deol.nvim'
