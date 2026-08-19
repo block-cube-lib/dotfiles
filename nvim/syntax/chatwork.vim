@@ -80,11 +80,13 @@ syntax region chatworkTask matchgroup=chatworkTaskStart start="\[task\]" end="\[
 " URL
 syntax match chatworkURL "https\?:\/\/[^[:space:]]\+"
 
-" Info block (no title)
-syntax region chatworkInfoBlock matchgroup=chatworkInfoStart start="\[info\]" end="\[\/info\]" contains=ALLBUT,@Spell
+" Cluster for elements allowed inside info blocks
+syntax cluster chatworkInside contains=chatworkMentionToAll,chatworkMentionUser,chatworkEmoji,chatworkCodeBlock,chatworkQuoteBlock,chatworkQuote,chatworkReply,chatworkTask,chatworkURL,chatworkInfoTitleRegion
 
-" Info block (with title)
-syntax region chatworkInfoBlock matchgroup=chatworkInfoStart start="\[info\]" end="\[\/info\]" contains=ALLBUT,@Spell
+" Info block nesting (up to 3 levels)
+syntax region chatworkInfoL1 matchgroup=chatworkInfoTagL1 start="\[info\]" end="\[\/info\]" contains=@chatworkInside,chatworkInfoL2
+syntax region chatworkInfoL2 matchgroup=chatworkInfoTagL2 start="\[info\]" end="\[\/info\]" contains=@chatworkInside,chatworkInfoL3
+syntax region chatworkInfoL3 matchgroup=chatworkInfoTagL3 start="\[info\]" end="\[\/info\]" contains=@chatworkInside,chatworkInfoL1
 
 " Info block title region
 syntax region chatworkInfoTitleRegion contained matchgroup=chatworkInfoTitleStart start="\[title\]" end="\[\/title\]"
@@ -101,8 +103,15 @@ hi def link chatworkReply Special
 hi def link chatworkTask Todo
 hi def link chatworkTaskStart Delimiter
 hi def link chatworkURL Underlined
-hi def link chatworkInfoBlock Statement
-hi def link chatworkInfoStart Delimiter
+
+" Nested Info Highlighting
+hi def link chatworkInfoL1 Statement
+hi def link chatworkInfoTagL1 Delimiter
+hi def link chatworkInfoL2 Type
+hi def link chatworkInfoTagL2 Special
+hi def link chatworkInfoL3 Constant
+hi def link chatworkInfoTagL3 Identifier
+
 hi def link chatworkInfoTitleRegion Title
 hi def link chatworkInfoTitleStart Delimiter
 
