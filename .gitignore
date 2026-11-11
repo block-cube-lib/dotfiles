@@ -22,3 +22,6 @@ github-copilot/
 # Machine-local overrides (kept on each machine, not in this repo)
 nvim/dpp/toml/local.toml
 nvim/dpp/hooks/*.local.lua
+
+# Hammerspoon machine-local config
+hammerspoon/init.local.lua
