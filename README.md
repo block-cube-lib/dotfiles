@@ -25,6 +25,12 @@ The files under `zsh/` in this repo are the shared parts.
 Other apps also write into `~/.config`; their directories are
 listed in `.gitignore` so `git status` stays clean.
 
+- `hammerspoon/` → `$XDG_CONFIG_HOME/hammerspoon/` — Hammerspoon
+  does not look here by default; point it once per machine with
+  `defaults write org.hammerspoon.Hammerspoon MJConfigFile "$HOME/.config/hammerspoon/init.lua"`
+  and reload its config. Machine-specific hotkeys go to
+  `hammerspoon/init.local.lua` (git-ignored, loaded when present).
+
 ## Shared vs. machine-specific settings
 
 Settings shared by every machine live in this repository.
