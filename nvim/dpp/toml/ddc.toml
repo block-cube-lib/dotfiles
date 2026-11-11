@@ -58,10 +58,6 @@ repo = 'Shougo/ddc-source-around'
 on_event = 'InsertEnter'
 
 [[plugins]]
-repo = 'Shougo/ddc-source-nvim-lsp'
-on_event = 'InsertEnter'
-
-[[plugins]]
 repo = 'github/copilot.vim'
 on_event = 'InsertEnter'
 lua_add = '''
