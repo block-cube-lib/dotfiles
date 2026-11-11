@@ -1,0 +1,23 @@
+; Global git config, shared across machines.
+; This file lives at $XDG_CONFIG_HOME/git/config (this repo is
+; cloned as ~/.config), which git reads as global config.
+; Machine-specific settings go to ~/.gitconfig.local
+; (included at the end of this file, so it overrides the
+; settings above). Note: a real ~/.gitconfig, if one exists,
+; is read after this file and wins over both.
+
+[user]
+	name = block
+	email = block.cube.lib@gmail.com
+
+[core]
+	editor = nvim
+	autocrlf = false
+
+; Keep existing branches/history style untouched elsewhere;
+; only set the default for brand-new repositories.
+[init]
+	defaultBranch = main
+
+[include]
+	path = ~/.gitconfig.local
