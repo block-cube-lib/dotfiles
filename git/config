@@ -1,0 +1,24 @@
+; Global git config, shared across machines and contexts
+; (including work). This file lives at
+; $XDG_CONFIG_HOME/git/config (this repo is cloned as
+; ~/.config), which git reads as global config.
+;
+; Machine/context-specific settings go to ~/.gitconfig.local
+; (included at the end of this file, so it overrides the
+; settings above). Note: a real ~/.gitconfig, if one exists,
+; is read after this file and wins over both.
+;
+; Identity (user.name / user.email) is deliberately NOT set
+; here — each context sets its own in ~/.gitconfig.local.
+
+[core]
+	editor = nvim
+	autocrlf = false
+
+; Keep existing branches/history style untouched elsewhere;
+; only set the default for brand-new repositories.
+[init]
+	defaultBranch = main
+
+[include]
+	path = ~/.gitconfig.local

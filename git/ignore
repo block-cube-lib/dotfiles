@@ -1,0 +1,9 @@
+# Global gitignore, shared across machines.
+# Lives at $XDG_CONFIG_HOME/git/ignore, which git uses as the
+# default global excludes file — no configuration needed.
+
+.DS_Store
+.Trashes
+.Spotlight-V100
+*.sw*
+*~
