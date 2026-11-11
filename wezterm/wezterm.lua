@@ -13,16 +13,19 @@ config.show_new_tab_button_in_tab_bar = false
 config.window_background_opacity = 0.85
 config.macos_window_background_blur = 10
 
-local handle = io.popen("which nu", "w")
-if handle == nil then
-	print("handle is null")
-	config.default_prog = { "bash" }
-else
-	local nu_path = handle:read("a")
-	handle:close()
-	print(nu_path)
-	if nu_path then
-		config.default_prog = { nu_path }
+-- Use nu as the default shell when it is available.
+local is_windows = wezterm.target_triple:find("windows") ~= nil
+local handle = io.popen(is_windows and "where nu" or "which nu", "r")
+if handle then
+	local output = handle:read("a") or ""
+	-- close() is falsy when the command failed (nu not found);
+	-- in that case `output` may hold an error message, not a path.
+	local ok = handle:close()
+	if ok then
+		local nu_path = output:match("[^\r\n]+")
+		if nu_path then
+			config.default_prog = { nu_path }
+		end
 	end
 end
 

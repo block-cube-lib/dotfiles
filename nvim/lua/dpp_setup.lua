@@ -6,7 +6,7 @@ return function()
 	local dppBase = CACHE_HOME .. "/dpp"
 	local dppSrc = dppBase .. "/repos/github.com/Shougo/dpp.vim"
 	local denopsSrc = dppBase .. "/repos/github.com/vim-denops/denops.vim"
-	local dppExtInstaller = CACHE_HOME .. "/repos/github.com/Shougo/dpp-ext-installer"
+	local dppExtInstaller = dppBase .. "/repos/github.com/Shougo/dpp-ext-installer"
 
 	git.clone("https://github.com/Shougo/dpp.vim", "main", dppSrc)
 	git.clone("https://github.com/vim-denops/denops.vim", "main", denopsSrc)
@@ -36,7 +36,7 @@ return function()
 	end
 
 	vim.api.nvim_create_autocmd("User", {
-		pattern = "Dpp:makeStatePort",
+		pattern = "Dpp:makeStatePost",
 		callback = function()
 			vim.notify("dpp make_state() is done")
 		end,
