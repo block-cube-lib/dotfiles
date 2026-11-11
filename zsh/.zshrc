@@ -1,86 +1,48 @@
 ###
-# history
+# Shared zsh settings.
+# Loaded from ~/.zshrc on each machine:
+#   source "$HOME/.config/zsh/.zshrc"
+# Machine-specific lines belong in ~/.zshrc.local,
+# which is loaded near the end of this file.
 ###
-# file
-mkdir -p ${XDG_CACHE_HOME:-$HOME/.cache}/zsh/
-export HISTFILE=${XDG_CACHE_HOME:-$HOME/.cache}/zsh/.zhistory
 
-
-# count of history to save in memory
-export HISTSIZE=1000
-
-# count of history to save in file
+# history
+mkdir -p "${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
+export HISTFILE="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/.zhistory"
+export HISTSIZE=10000
 export SAVEHIST=10000
-
-# ignore duplicates
 setopt hist_ignore_dups
-
-# save begin and end time
 setopt EXTENDED_HISTORY
 
-# completion
-autoload history-search-end
+# history search by prefix
+autoload -Uz history-search-end
 zle -N history-beginning-search-backward-end history-search-end
 zle -N history-beginning-search-forward-end history-search-end
 bindkey '^P' history-beginning-search-backward-end
 bindkey '^N' history-beginning-search-forward-end
 
-# color
-autoload -Uz colors
-colors
+# completion (needed before zsh-z registers its completion)
+autoload -Uz compinit
+compinit
 
-# hook
-autoload -Uz add-zsh-hook
+# zsh-z directory jumper (cloned to ~/zsh_plugins on each machine)
+if [[ -f "$HOME/zsh_plugins/zsh-z/zsh-z.plugin.zsh" ]]; then
+  source "$HOME/zsh_plugins/zsh-z/zsh-z.plugin.zsh"
+fi
 
-# vcs
-autoload -Uz vcs_info
-add-zsh-hook precmd vcs_info
+# Use nvr as the git editor inside a Neovim terminal
+if [[ -n "$NVIM" || -n "$NVIM_LISTEN_ADDRESS" ]]; then
+  export GIT_EDITOR="nvr -cc split --remote-wait"
+fi
 
-zstyle ':vcs_info:git:*' check-for-changes true
-zstyle ':vcs_info:git:*' stagedstr "%F{yellow}!"
-zstyle ':vcs_info:git:*' unstagedstr "%F{red}+"
-zstyle ':vcs_info:*' formats "%F{green}%c%u[%b]%f"
-zstyle ':vcs_info:*' actionformats '[%b|%a]'
-
-# prompt
-function left_prompt()
-{
-  # git branch name
-  local git_status=""
-  if [[ -n "${vcs_info_msg_0_}" ]]; then
-    git_status="${vcs_info_msg_0_}"
-  fi
-
-  # current directory
-  local current_dir="%{$fg[cyan]%}%~%{$reset_color%}"
-
-  # >>>
-  local command_line_header=""
-  command_line_header="${command_line_header}%{$fg_bold[red]%}>%{$reset_color%}"
-  command_line_header="${command_line_header}%{$fg_bold[yellow]%}>%{$reset_color%}"
-  command_line_header="${command_line_header}%{$fg_bold[green]%}>%{$reset_color%}"
-
-  # empty line
-  PROMPT="
-${current_dir} ${git_status}
-${command_line_header} "
-}
-
-function right_prompt()
-{
-  if [[ ${?} -eq 0 ]]; then
-    RPROMPT="%{$fg[blue]%}o%{$reset_color%}"
-  else
-    RPROMPT="%{$fg[red]%}x $?%{$reset_color%}"
-  fi
-}
-
-add-zsh-hook precmd left_prompt
-add-zsh-hook precmd right_prompt
-
-# Machine-specific settings that are not kept in this repository
-# (e.g. `eval "$(starship init zsh)"`, Homebrew prefix, work tools).
-# Put them in ~/.zshrc.local on each machine.
+# Machine-specific settings that are not kept in this repository.
+# Loaded before the prompt setup so PATH additions made there
+# (Homebrew, cargo, ...) are already in effect.
 if [[ -f "$HOME/.zshrc.local" ]]; then
   source "$HOME/.zshrc.local"
+fi
+
+# prompt (initialised last, after all PATH setup)
+if command -v starship >/dev/null 2>&1; then
+  eval "$(starship init zsh)"
 fi

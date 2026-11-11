@@ -26,9 +26,16 @@ each shared entry point loads a local file that is kept only on
 that machine (git-ignored):
 
 - zsh: the startup files in `$HOME` are the per-machine layer
-  (XDG variables, PATH, Homebrew, SDKs). Shared zsh settings live
-  under `zsh/` in this repo; `zsh/.zshrc` also loads
-  `~/.zshrc.local` at the end when it is used as the base.
+  (`.zshenv`: XDG variables, PATH, Homebrew, SDKs).
+  `~/.zshrc` itself only loads the shared base:
+
+      source "$HOME/.config/zsh/.zshrc"
+
+  and the shared base in turn loads `~/.zshrc.local` at the end.
+  Move the lines your current `~/.zshrc` has (Google Cloud SDK,
+  Ruby, Unity CLI, ...) into `~/.zshrc.local`.
+  Prompt is starship; the old
+  hand-written vcs_info prompt was removed from the shared base.
 - Neovim/dpp: plugins shared by every machine go into the toml
   files under `nvim/dpp/toml/`. Machine-only plugins can be kept
   in `nvim/dpp/toml/local.toml` (git-ignored).
