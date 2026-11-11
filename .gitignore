@@ -1,6 +1,18 @@
 # macOS
 .DS_Store
 
+# This repository is cloned as ~/.config itself, so other apps
+# keep creating their own directories next to the tracked ones.
+# Ignore everything that is not ours.
+NuGet/
+configstore/
+gcloud/
+gtk-2.0/
+karabiner/
+xbuild/
+yarn/
+fisher/
+
 # neovim
 .netrwhist
 
@@ -8,6 +20,5 @@
 github-copilot/
 
 # Machine-local overrides (kept on each machine, not in this repo)
-zsh/.zshrc.local
 nvim/dpp/toml/local.toml
 nvim/dpp/hooks/*.local.lua

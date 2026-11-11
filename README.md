@@ -4,14 +4,19 @@ Personal configuration, mainly Neovim (dpp.vim) + WezTerm + zsh.
 
 ## Layout
 
-| In this repo | Placed at |
-|---|---|
-| `nvim/` | `~/.config/nvim/` |
-| `wezterm/` | `~/.config/wezterm/` |
-| `zsh/.zshrc`, `zsh/.zshenv` | `~/` |
-| `starship.toml` | `~/.config/starship.toml` |
-| `.editorconfig` | `~/` |
-| `cpp/.clang-format` | as needed per project |
+This repository is cloned as `~/.config` itself
+(`XDG_CONFIG_HOME=$HOME/.config`), so directories in the repo are
+used in place — nothing is copied or symlinked:
+
+- `nvim/` → `$XDG_CONFIG_HOME/nvim/`
+- `wezterm/` → `$XDG_CONFIG_HOME/wezterm/`
+- `starship.toml` → `$XDG_CONFIG_HOME/starship.toml`
+
+zsh startup files (`~/.zshenv`, `~/.zshrc`) live in `$HOME`,
+outside this repository, and are kept per machine.
+The files under `zsh/` in this repo are the shared parts.
+Other apps also write into `~/.config`; their directories are
+listed in `.gitignore` so `git status` stays clean.
 
 ## Shared vs. machine-specific settings
 
@@ -20,9 +25,10 @@ Settings that differ per machine do NOT go into the shared files;
 each shared entry point loads a local file that is kept only on
 that machine (git-ignored):
 
-- zsh: `~/.zshrc` loads `~/.zshrc.local` at the end.
-  Per-machine lines such as `eval "$(starship init zsh)"`,
-  the Homebrew prefix or work-only tools belong there.
+- zsh: the startup files in `$HOME` are the per-machine layer
+  (XDG variables, PATH, Homebrew, SDKs). Shared zsh settings live
+  under `zsh/` in this repo; `zsh/.zshrc` also loads
+  `~/.zshrc.local` at the end when it is used as the base.
 - Neovim/dpp: plugins shared by every machine go into the toml
   files under `nvim/dpp/toml/`. Machine-only plugins can be kept
   in `nvim/dpp/toml/local.toml` (git-ignored).
