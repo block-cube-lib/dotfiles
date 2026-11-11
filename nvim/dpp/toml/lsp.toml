@@ -1,4 +1,4 @@
 [[plugins]]
 repo = 'neovim/nvim-lspconfig'
-on_ft = ['cs', 'rust', 'lua', 'typescript']
+on_ft = ['cs', 'rust', 'lua', 'typescript', 'typescriptreact', 'javascript', 'javascriptreact']
 hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/nvim-lspconfig.lua'
