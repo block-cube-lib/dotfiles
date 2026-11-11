@@ -1,0 +1,7 @@
+# Machine-local plugins. Copy this file to `local.toml` in the same
+# directory (git-ignored) and edit it on each machine.
+# local.toml is loaded eagerly (lazy = false) by dpp.ts when present.
+
+[[plugins]]
+repo = 'subnut/nvim-ghost.nvim'
+hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/nvim-ghost.local.lua'

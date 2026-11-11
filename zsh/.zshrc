@@ -77,3 +77,10 @@ function right_prompt()
 
 add-zsh-hook precmd left_prompt
 add-zsh-hook precmd right_prompt
+
+# Machine-specific settings that are not kept in this repository
+# (e.g. `eval "$(starship init zsh)"`, Homebrew prefix, work tools).
+# Put them in ~/.zshrc.local on each machine.
+if [[ -f "$HOME/.zshrc.local" ]]; then
+  source "$HOME/.zshrc.local"
+fi

@@ -51,6 +51,22 @@ export class Config extends BaseConfig {
       { path: `${toml_dir}/ddc.toml`, lazy: true, },
     ];
 
+    // Machine-local plugins (git-ignored): loaded only when the
+    // file exists on this machine.
+    const xdgConfigHome = Deno.env.get("XDG_CONFIG_HOME");
+    const homeDir = Deno.env.get("HOME") ?? Deno.env.get("USERPROFILE") ?? "";
+    const configHome = (xdgConfigHome && xdgConfigHome.length > 0)
+      ? xdgConfigHome
+      : `${homeDir}/.config`;
+    try {
+      const localToml = `${configHome}/nvim/dpp/toml/local.toml`;
+      if (Deno.statSync(localToml).isFile) {
+        toml_load_settings.push({ path: localToml, lazy: false });
+      }
+    } catch {
+      // No local.toml on this machine: nothing to load.
+    }
+
     for (const {path, lazy} of toml_load_settings) {
       console.log(`load ${path}`);
       const toml = await args.dpp.extAction(

@@ -1,20 +1,13 @@
+# macOS
+.DS_Store
+
 # neovim
 .netrwhist
-
-# fish
-fish/fish_variables
-fish/fishd.*
-
-# fisher
-fisher/
 
 # GitHub Copilot
 github-copilot/
 
-NuGet/
-configstore/
-gcloud/
-gtk-2.0/
-karabiner/
-xbuild/
-yarn/
+# Machine-local overrides (kept on each machine, not in this repo)
+zsh/.zshrc.local
+nvim/dpp/toml/local.toml
+nvim/dpp/hooks/*.local.lua

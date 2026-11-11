@@ -1,0 +1,26 @@
+-- Machine-local hook for nvim-ghost. Copy to `nvim-ghost.local.lua`
+-- in the same directory (git-ignored) and replace the host pattern
+-- with the one you actually use.
+-- lua_add {{{
+vim.g.nvim_ghost_autostart = 1
+
+local group = vim.api.nvim_create_augroup('nvim_ghost_user_autocommands', {})
+
+-- Chatwork
+vim.api.nvim_create_autocmd({ 'User' }, {
+	pattern = 'chatwork.example.co.jp*',
+	group = group,
+	callback = function()
+		vim.opt_local.filetype = 'chatwork'
+	end,
+})
+
+-- GitHub
+vim.api.nvim_create_autocmd({ 'User' }, {
+	pattern = 'github.com*',
+	group = group,
+	callback = function()
+		vim.opt_local.filetype = 'markdown'
+	end,
+})
+-- }}}
