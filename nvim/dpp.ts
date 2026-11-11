@@ -1,10 +1,13 @@
 import {
   BaseConfig,
+  type ConfigReturn,
+} from "jsr:@shougo/dpp-vim@6.6.0/config";
+import type { Dpp } from "jsr:@shougo/dpp-vim@6.6.0/dpp";
+import type {
   ContextBuilder,
-  Dpp,
   Plugin,
-} from "https://deno.land/x/dpp_vim@v0.2.0/types.ts";
-import { Denops } from "https://deno.land/x/dpp_vim@v0.2.0/deps.ts";
+} from "jsr:@shougo/dpp-vim@6.6.0/types";
+import type { Denops } from "jsr:@denops/std@8.2.0";
 
 type Toml = {
   ftplugins?: Record<string, string>;
@@ -28,10 +31,7 @@ export class Config extends BaseConfig {
     contextBuilder: ContextBuilder;
     basePath: string;
     dpp: Dpp;
-  }): Promise<{
-    plugins: Plugin[];
-    stateLines: string[];
-  }> {
+  }): Promise<ConfigReturn> {
     args.contextBuilder.setGlobal({
       protocols: ["git"],
     });
@@ -123,6 +123,10 @@ export class Config extends BaseConfig {
     ) as LazyMakeStateResult | undefined;
 
     console.log(lazy_result);
+
+    if (!lazy_result) {
+      throw new Error("dpp-ext-lazy makeState returned no result");
+    }
 
     return {
       plugins: lazy_result.plugins,
