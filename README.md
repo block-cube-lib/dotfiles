@@ -20,7 +20,7 @@ listed in `.gitignore` so `git status` stays clean.
 
 - `hammerspoon/` → `$XDG_CONFIG_HOME/hammerspoon/` — Hammerspoon
   does not look here by default; point it once per machine with
-  `defaults write org.hammerspoon.Hammerspoon MJConfigFile "~/.config/hammerspoon/init.lua"`
+  `defaults write org.hammerspoon.Hammerspoon MJConfigFile "$HOME/.config/hammerspoon/init.lua"`
   and reload its config. Machine-specific hotkeys go to
   `hammerspoon/init.local.lua` (git-ignored, loaded when present).
 
