@@ -16,9 +16,9 @@ vim.fn["ddc#custom#patch_global"]({
 			converters = { 'converter_remove_overlap', 'converter_fuzzy' },
 			minAutoCompleteLength = 3,
 		},
-		["nvim-lsp"] = {
+		["lsp"] = {
 			mark = '[LSP]',
-			forceCompletionPattern = { [['\.\w*|:\w*|->\w*']] },
+			forceCompletionPattern = [[\.\w*|:\w*|->\w*]],
 			minAutoCompleteLength = 1,
 		},
 		skkeleton = {
@@ -45,7 +45,7 @@ vim.fn["ddc#custom#patch_global"]({
 		around = { mark = '[around]' },
 	},
 	sourceParams = {
-		["nvim-lsp"] = {
+		["lsp"] = {
 			snippetEngine = vim.fn["denops#callback#register"](function(body) vim.fn["vsnip#anonymous"](body) end),
 			enableResolveItem = true,
 			enableAdditionalTextEdit = true,
