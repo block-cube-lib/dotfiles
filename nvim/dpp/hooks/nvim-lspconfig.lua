@@ -5,8 +5,19 @@
 -- (Neovim is kept at the latest version, so there is
 -- deliberately no fallback to the legacy lspconfig setup.)
 
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-capabilities.textDocument.completion.completionItem.snippetSupport = true
+-- Prefer the capability set recommended by ddc-source-lsp (it
+-- enables resolve support, item defaults, etc. for the ddc 'lsp'
+-- source). That plugin loads on InsertEnter, so it may not be
+-- require-able yet when this hook runs; fall back to the plain
+-- defaults in that case.
+local ok, ddc_source_lsp = pcall(require, 'ddc_source_lsp')
+local capabilities
+if ok then
+	capabilities = ddc_source_lsp.make_client_capabilities()
+else
+	capabilities = vim.lsp.protocol.make_client_capabilities()
+	capabilities.textDocument.completion.completionItem.snippetSupport = true
+end
 
 -- Global mappings.
 -- See `:help vim.diagnostic.*` for documentation on any of the below functions

@@ -45,6 +45,9 @@ return function()
 	vim.cmd("filetype indent plugin on")
 	vim.cmd("syntax on")
 
+	vim.api.nvim_create_user_command('DppMakeState', function()
+		dpp.make_state(dppBase, CONFIG_HOME .. "/nvim/dpp.ts")
+	end, {})
 	vim.api.nvim_create_user_command('DppInstall', "call dpp#async_ext_action('installer', 'install')", {})
 	vim.api.nvim_create_user_command(
 		'DppUpdate', 
