@@ -209,43 +209,131 @@ local function board_win()
 	return nil
 end
 
+local home_tabpage, lend_deol
+
+-- The window session content is shown in: the one that was
+-- current when the board opened, else the widest ordinary
+-- window of this tab, else a fresh split beside the board.
+-- Windows showing a deol-edit buffer are only a last resort:
+-- they are an input slot, not a display slot.
+local function main_window(target_buf)
+	local for_edit = target_buf ~= nil
+		and vim.bo[target_buf].filetype == 'deol-edit'
+	local cur_tab = vim.api.nvim_get_current_tabpage()
+	local function usable(win, allow_edit)
+		return win and vim.api.nvim_win_is_valid(win)
+			and vim.api.nvim_win_get_tabpage(win) == cur_tab
+			and vim.api.nvim_win_get_buf(win) ~= state.board_buf
+			and vim.api.nvim_win_get_config(win).relative == ''
+			and (allow_edit
+				or vim.bo[vim.api.nvim_win_get_buf(win)].filetype
+					~= 'deol-edit')
+	end
+	if for_edit then
+		-- Reuse the tab's edit slot if one is on screen, rather
+		-- than evicting the terminal window for a second edit
+		-- window.
+		for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+			local b = vim.api.nvim_win_get_buf(win)
+			if vim.bo[b].filetype == 'deol-edit' then
+				return win
+			end
+		end
+	end
+	if usable(state.prev_win, for_edit) then
+		return state.prev_win
+	end
+	for _, allow_edit in ipairs(for_edit and { true } or { false, true }) do
+		local best, best_width = nil, -1
+		for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+			if usable(win, allow_edit) then
+				local width = vim.api.nvim_win_get_width(win)
+				if width > best_width then
+					best, best_width = win, width
+				end
+			end
+		end
+		if best then
+			return best
+		end
+	end
+	vim.cmd('rightbelow vsplit')
+	local win = vim.api.nvim_get_current_win()
+	vim.wo[win].winfixwidth = false
+	vim.wo[win].signcolumn = 'auto'
+	vim.wo[win].cursorline = false
+	return win
+end
+
+local function show_in_main(buf)
+	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+		if vim.api.nvim_win_get_buf(win) == buf then
+			vim.api.nvim_set_current_win(win)
+			return
+		end
+	end
+	local win = main_window(buf)
+	vim.api.nvim_win_set_buf(win, buf)
+	vim.api.nvim_set_current_win(win)
+end
+
 local function jump()
 	local buf = state.line_map[vim.api.nvim_win_get_cursor(0)[1]]
 	if not buf or not vim.api.nvim_buf_is_valid(buf) then
 		return
 	end
-	local wins = vim.fn.win_findbuf(buf)
-	if #wins > 0 then
-		vim.api.nvim_set_current_win(wins[1])
-	else
-		local target = state.prev_win
-		if not target or not vim.api.nvim_win_is_valid(target)
-			or vim.api.nvim_win_get_tabpage(target) ~= vim.api.nvim_get_current_tabpage()
-			or vim.api.nvim_win_get_buf(target) == state.board_buf then
-			target = nil
-			local best_width = -1
-			for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-				if vim.api.nvim_win_get_buf(win) ~= state.board_buf
-					and vim.api.nvim_win_get_config(win).relative == '' then
-					local width = vim.api.nvim_win_get_width(win)
-					if width > best_width then
-						best_width = width
-						target = win
-					end
-				end
-			end
-		end
-		if target then
-			vim.api.nvim_win_set_buf(target, buf)
-			vim.api.nvim_set_current_win(target)
-		else
-			vim.cmd('rightbelow vsplit')
-			vim.api.nvim_win_set_buf(0, buf)
-		end
+	show_in_main(buf)
+	local home = home_tabpage(buf)
+	if home then
+		lend_deol(home, buf)
 	end
 	if is_terminal(buf) then
 		vim.cmd('startinsert')
 	end
+end
+
+-- Read a scalar field of a tab's deol instance without
+-- converting the whole dict (it holds funcrefs) into Lua.
+local function deol_field(tab, key)
+	local nr = vim.api.nvim_tabpage_get_number(tab)
+	local ok, val = pcall(vim.api.nvim_eval, string.format(
+		"gettabvar(%d, 'deol', {})->get('%s', -1)", nr, key))
+	if ok and type(val) == 'number' then
+		return val
+	end
+	return -1
+end
+
+-- The tab that owns this terminal's deol instance, identified
+-- exactly by the instance's own bufnr (not by what happens to
+-- be visible where).
+home_tabpage = function(term_buf)
+	for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
+		if deol_field(tab, '_agent_board_lent') ~= 1
+			and deol_field(tab, 'bufnr') == term_buf then
+			return tab
+		end
+	end
+	return nil
+end
+
+-- deol resolves its instance from the CURRENT tab (t:deol),
+-- so while a session's buffers are shown here, this tab needs
+-- a t:deol that points at that session; otherwise deol keys
+-- used here (e, execute, ...) would go nowhere -- or worse,
+-- to a previously shown session. AgentBoardLendDeol (defined
+-- in setup) lends a copy() of the home tab's instance, marked
+-- _agent_board_lent so it can be replaced when another
+-- session is shown; a tab that owns a deol itself (unmarked)
+-- is never overwritten, and the home instance is not mutated.
+lend_deol = function(home, term_buf)
+	local cur_tab = vim.api.nvim_get_current_tabpage()
+	if not home or home == cur_tab then
+		return
+	end
+	local cur_nr = vim.api.nvim_tabpage_get_number(cur_tab)
+	local home_nr = vim.api.nvim_tabpage_get_number(home)
+	vim.fn.AgentBoardLendDeol(home_nr, cur_nr, term_buf)
 end
 
 local function jump_edit()
@@ -253,29 +341,29 @@ local function jump_edit()
 	if not buf or not vim.api.nvim_buf_is_valid(buf) then
 		return
 	end
-	local wins = vim.fn.win_findbuf(buf)
-	if #wins == 0 then
-		jump()
-		return
-	end
-	local tab = vim.api.nvim_win_get_tabpage(wins[1])
-	vim.api.nvim_set_current_tabpage(tab)
-	-- A deol tab pairs its terminal with a deol-edit window;
-	-- that input buffer is what 'e' should land on.
-	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab)) do
-		local b = vim.api.nvim_win_get_buf(win)
-		if vim.bo[b].filetype == 'deol-edit' then
-			vim.api.nvim_set_current_win(win)
-			vim.cmd('startinsert')
-			return
+	local home = home_tabpage(buf)
+	local edit_buf = nil
+	if home then
+		local nr = deol_field(home, 'edit_bufnr')
+		if nr > 0 and vim.api.nvim_buf_is_valid(nr) then
+			edit_buf = nr
 		end
 	end
-	-- No edit window yet: focus the terminal and let deol's
-	-- own 'e' mapping open the edit buffer. Normal mode first,
-	-- or the 'e' would be typed into the terminal job.
-	vim.api.nvim_set_current_win(wins[1])
-	vim.cmd('stopinsert')
-	vim.api.nvim_feedkeys('e', 'm', false)
+	if edit_buf then
+		show_in_main(edit_buf)
+		lend_deol(home, buf)
+		vim.cmd('startinsert')
+	elseif home then
+		-- No edit buffer yet: show the terminal here and let
+		-- deol's own 'e' mapping open the edit buffer in
+		-- this tab, against the lent instance.
+		show_in_main(buf)
+		lend_deol(home, buf)
+		vim.cmd('stopinsert')
+		vim.api.nvim_feedkeys('e', 'm', false)
+	else
+		jump()
+	end
 end
 
 local function kill()
@@ -389,6 +477,16 @@ function M.setup()
 		return
 	end
 	state.started = true
+	vim.cmd([[
+		function! AgentBoardLendDeol(home_nr, cur_nr, term_buf) abort
+			let cur = gettabvar(a:cur_nr, 'deol', {})
+			if cur == {} || cur->get('_agent_board_lent', 0)
+				let d = copy(gettabvar(a:home_nr, 'deol', {}))
+				let d._agent_board_lent = 1
+				call settabvar(a:cur_nr, 'deol', d)
+			endif
+		endfunction
+	]])
 	local timer = vim.uv.new_timer()
 	state.timer = timer
 	timer:start(POLL_MS, POLL_MS, vim.schedule_wrap(function()
@@ -404,6 +502,7 @@ function M.setup()
 end
 
 -- Exposed for tests.
+M._home_tabpage = home_tabpage
 M._sessions = sessions
 M._render = render
 M._poll = poll
