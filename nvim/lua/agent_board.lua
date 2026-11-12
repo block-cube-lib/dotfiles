@@ -23,6 +23,7 @@ local BOARD_WIDTH = 44
 -- Spawn presets shown in the board header.
 local AGENTS = {
 	{ key = 'g', label = 'gemini', command = 'gemini' },
+	{ key = 'r', label = 'reviewer', command = 'gemini' },
 	{ key = 's', label = 'shell', command = nil },
 }
 
