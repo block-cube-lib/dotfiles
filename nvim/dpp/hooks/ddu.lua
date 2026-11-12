@@ -96,8 +96,31 @@ vim.fn["ddu#custom#patch_local"]('file_recursive', {
 vim.api.nvim_create_autocmd('FileType', {
 	pattern = { 'ddu-ff' },
 	callback = function(ev)
-		-- (ddu#ui#get_item()['__sourceName'] == 'buffer') ?
 		local opt = { noremap = true, silent = true, buffer = ev.buf }
+		-- `d` in the buffer list deletes the buffer, not the
+		-- file: buffer items are file-kind, whose 'delete'
+		-- action removes the file from disk. That action lives
+		-- on `D` instead. In file lists `d` keeps 'delete'.
+		local function delete_item()
+			local items = vim.fn['ddu#ui#get_items']()
+			if not (items[1] and items[1]['__sourceName'] == 'buffer') then
+				vim.fn['ddu#ui#do_action']('itemAction', { name = 'delete' })
+				return
+			end
+			local deleted = false
+			for _, item in ipairs(items) do
+				local ok, err = pcall(vim.api.nvim_buf_delete,
+					item['action']['bufNr'], { force = false })
+				if ok then
+					deleted = true
+				else
+					vim.notify(tostring(err), vim.log.levels.WARN)
+				end
+			end
+			if deleted then
+				vim.fn['ddu#ui#do_action']('refreshItems')
+			end
+		end
 		vim.keymap.set('n', '<CR>', [[<Cmd>call ddu#ui#do_action('itemAction')<CR>]],
 			{ noremap = true, silent = true })
 		vim.keymap.set('n', 'S',
@@ -111,7 +134,8 @@ vim.api.nvim_create_autocmd('FileType', {
 		opt)
 		vim.keymap.set('n', '<Esc>', [[<Cmd>call ddu#ui#do_action('quit')<CR>]], opt)
 		vim.keymap.set('n', 'p', [[<Cmd>call ddu#ui#do_action('preview')<CR>]], opt)
-		vim.keymap.set('n', 'd', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'delete'})<CR>]], opt)
+		vim.keymap.set('n', 'd', delete_item, opt)
+		vim.keymap.set('n', 'D', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'delete'})<CR>]], opt)
 		vim.keymap.set('n', '<C-l>', [[<Cmd>call ddu#ui#do_action('itemAction', {'name': 'refresh'})<CR>]],
 		opt)
 		vim.keymap.set('n', 'i', [[<Cmd>call ddu#ui#do_action('openFilterWindow')<CR>]], opt)
