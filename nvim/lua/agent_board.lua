@@ -23,7 +23,6 @@ local BOARD_WIDTH = 44
 -- Spawn presets shown in the board header.
 local AGENTS = {
 	{ key = 'g', label = 'gemini', command = 'gemini' },
-	{ key = 'a', label = 'agy', command = 'agy' },
 	{ key = 's', label = 'shell', command = nil },
 }
 
@@ -164,7 +163,7 @@ local function render()
 		table.insert(keys, agent.key .. ':' .. agent.label)
 	end
 	local lines = {
-		'Agents  ' .. table.concat(keys, ' ') .. '  x:kill q:close',
+		'Agents  ' .. table.concat(keys, ' ') .. '  <CR>:jump e:edit x:kill q:close',
 		'',
 	}
 	local line_map = {}
@@ -248,6 +247,36 @@ local function jump()
 	end
 end
 
+local function jump_edit()
+	local buf = state.line_map[vim.api.nvim_win_get_cursor(0)[1]]
+	if not buf or not vim.api.nvim_buf_is_valid(buf) then
+		return
+	end
+	local wins = vim.fn.win_findbuf(buf)
+	if #wins == 0 then
+		jump()
+		return
+	end
+	local tab = vim.api.nvim_win_get_tabpage(wins[1])
+	vim.api.nvim_set_current_tabpage(tab)
+	-- A deol tab pairs its terminal with a deol-edit window;
+	-- that input buffer is what 'e' should land on.
+	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tab)) do
+		local b = vim.api.nvim_win_get_buf(win)
+		if vim.bo[b].filetype == 'deol-edit' then
+			vim.api.nvim_set_current_win(win)
+			vim.cmd('startinsert')
+			return
+		end
+	end
+	-- No edit window yet: focus the terminal and let deol's
+	-- own 'e' mapping open the edit buffer. Normal mode first,
+	-- or the 'e' would be typed into the terminal job.
+	vim.api.nvim_set_current_win(wins[1])
+	vim.cmd('stopinsert')
+	vim.api.nvim_feedkeys('e', 'm', false)
+end
+
 local function kill()
 	local buf = state.line_map[vim.api.nvim_win_get_cursor(0)[1]]
 	if buf and vim.api.nvim_buf_is_valid(buf) then
@@ -257,6 +286,13 @@ local function kill()
 end
 
 local function spawn(agent)
+	-- The board keeps the cursor: remember where we are, spawn
+	-- in a new tab, then come straight back.
+	local home_win = board_win()
+	local home_tab = home_win
+		and vim.api.nvim_win_get_tabpage(home_win) or nil
+	local home_line = home_win
+		and vim.api.nvim_win_get_cursor(home_win)[1] or nil
 	-- Snapshot before tabnew: deol converts the new tab's empty
 	-- buffer into the terminal, so it must count as "new" too.
 	local before = {}
@@ -279,23 +315,33 @@ local function spawn(agent)
 			buf = b
 		end
 	end
-	if not buf then
-		return
-	end
-	vim.b[buf].agent_board_label = agent.label
-	state.ticks[buf] = vim.b[buf].changedtick
-	state.last_active[buf] = vim.uv.now()
-	if agent.command then
-		local chan = vim.bo[buf].channel
-		if chan and chan > 0 then
-			-- Wait a moment for the shell prompt before typing.
-			vim.defer_fn(function()
-				if vim.api.nvim_buf_is_valid(buf) then
-					pcall(vim.fn.chansend, chan, agent.command .. '\r')
-				end
-			end, 300)
+	if buf then
+		vim.b[buf].agent_board_label = agent.label
+		state.ticks[buf] = vim.b[buf].changedtick
+		state.last_active[buf] = vim.uv.now()
+		if agent.command then
+			local chan = vim.bo[buf].channel
+			if chan and chan > 0 then
+				-- Wait a moment for the shell prompt before typing.
+				vim.defer_fn(function()
+					if vim.api.nvim_buf_is_valid(buf) then
+						pcall(vim.fn.chansend, chan, agent.command .. '\r')
+					end
+				end, 300)
+			end
 		end
 	end
+	-- Back to the board; the new session appears in the list.
+	if home_win and vim.api.nvim_win_is_valid(home_win) then
+		vim.cmd('stopinsert')
+		vim.api.nvim_set_current_tabpage(home_tab)
+		vim.api.nvim_set_current_win(home_win)
+		if home_line then
+			pcall(vim.api.nvim_win_set_cursor,
+				home_win, { home_line, 0 })
+		end
+	end
+	render()
 end
 
 local function open()
@@ -311,8 +357,8 @@ local function open()
 
 		local opt = { noremap = true, silent = true, buffer = buf }
 		vim.keymap.set('n', '<CR>', jump, opt)
+		vim.keymap.set('n', 'e', jump_edit, opt)
 		vim.keymap.set('n', 'x', kill, opt)
-		vim.keymap.set('n', 'r', render, opt)
 		vim.keymap.set('n', 'q', function() M.toggle() end, opt)
 		for _, agent in ipairs(AGENTS) do
 			vim.keymap.set('n', agent.key, function() spawn(agent) end, opt)
