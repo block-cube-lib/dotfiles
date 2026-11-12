@@ -100,6 +100,55 @@ vim.api.nvim_create_autocmd('InsertEnter', {
 		vim.keymap.set({ 'n', 's' }, '<S>', [[<Plug>(vsnip-cut-text)]], { expr = true, noremap = false })
 	end,
 })
+-- Chain completion (Rust paths): confirming a module from the
+-- LSP source after a `::` (e.g. `env` in `std::|`) inserts
+-- another `::` and reopens completion, so the module's members
+-- are offered without typing `::` first. The edit is deferred
+-- with vim.schedule so ddc-source-lsp's own PumCompleteDone
+-- handling (textEdit / additionalTextEdits) settles first; all
+-- guards are re-checked against the final buffer state.
+local chain_group = vim.api.nvim_create_augroup('ddc_chain_completion', { clear = true })
+vim.api.nvim_create_autocmd('User', {
+	group = chain_group,
+	pattern = 'PumCompleteDone',
+	callback = function()
+		local item = vim.g['pum#completed_item']
+		if type(item) ~= 'table' then
+			return
+		end
+		if item.__sourceName ~= 'lsp' or item.kind ~= 'Module' then
+			return
+		end
+		if vim.bo.filetype ~= 'rust' then
+			return
+		end
+		local word = item.word or ''
+		if word == '' then
+			return
+		end
+		vim.schedule(function()
+			if vim.fn.mode() ~= 'i' then
+				return
+			end
+			local cursor = vim.api.nvim_win_get_cursor(0)
+			local row, col = cursor[1], cursor[2]
+			local before = vim.api.nvim_get_current_line():sub(1, col)
+			-- Chain only in path position: the cursor is right
+			-- after the confirmed word, and the word itself is
+			-- preceded by `::`.
+			if before:sub(-#word) ~= word then
+				return
+			end
+			if before:sub(-#word - 2, -#word - 1) ~= '::' then
+				return
+			end
+			vim.api.nvim_buf_set_text(0, row - 1, col, row - 1, col, { '::' })
+			vim.api.nvim_win_set_cursor(0, { row, col + 2 })
+			vim.fn['ddc#map#manual_complete']()
+		end)
+	end,
+})
+
 vim.fn["ddc#enable_terminal_completion"]()
 vim.fn["ddc#enable"]()
 --- }}}
