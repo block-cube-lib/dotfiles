@@ -27,6 +27,8 @@ local AGENTS = {
 	{ key = 's', label = 'shell', command = nil },
 }
 
+local home_tabpage, lend_deol
+
 local state = {
 	ticks = {}, -- bufnr -> last seen changedtick
 	last_active = {}, -- bufnr -> uv.now() when output last seen
@@ -107,41 +109,60 @@ local function sessions()
 	local now = vim.uv.now()
 	local list = {}
 	for _, buf in ipairs(terminal_bufs()) do
-		local status, age
-		if not job_running(buf) then
-			status = 'exited'
-		elseif state.last_active[buf]
-			and now - state.last_active[buf] <= WORKING_WINDOW_MS then
-			status = 'working'
-		else
-			status = 'idle'
+		-- A terminal shown in no window belongs to a closed
+		-- tab (its buffer and job survive the tab); it is not
+		-- a live session anymore, so it leaves the list.
+		if #vim.fn.win_findbuf(buf) > 0 then
+			local status, age
+			if not job_running(buf) then
+				status = 'exited'
+			elseif state.last_active[buf]
+				and now - state.last_active[buf] <= WORKING_WINDOW_MS then
+				status = 'working'
+			else
+				status = 'idle'
+			end
+			if state.last_active[buf] and state.last_active[buf] > 0 then
+				age = fmt_age(now - state.last_active[buf])
+			end
+			table.insert(list, {
+				bufnr = buf,
+				label = derive_label(buf),
+				status = status,
+				age = age,
+				tail = tail_line(buf),
+			})
 		end
-		if state.last_active[buf] and state.last_active[buf] > 0 then
-			age = fmt_age(now - state.last_active[buf])
-		end
-		table.insert(list, {
-			bufnr = buf,
-			label = derive_label(buf),
-			status = status,
-			age = age,
-			tail = tail_line(buf),
-		})
 	end
 	return list
 end
 
 local function poll()
 	for _, buf in ipairs(terminal_bufs()) do
-		local tick = vim.b[buf].changedtick
-		if state.ticks[buf] == nil then
-			-- First sight: do not mistake it for fresh output.
-			state.ticks[buf] = tick
-			if state.last_active[buf] == nil then
-				state.last_active[buf] = 0
+		if #vim.fn.win_findbuf(buf) == 0 then
+			-- Shown nowhere. A dead job's buffer is wiped. A
+			-- deol terminal whose owning tab is gone is wiped
+			-- too: its deol died with the tab, so the session
+			-- is over (deleting the buffer stops the job).
+			-- Plain live terminals are left alone, as Neovim
+			-- itself leaves them.
+			if not job_running(buf)
+				or (vim.bo[buf].filetype == 'deol'
+					and not home_tabpage(buf)) then
+				pcall(vim.api.nvim_buf_delete, buf, { force = true })
 			end
-		elseif state.ticks[buf] ~= tick then
-			state.ticks[buf] = tick
-			state.last_active[buf] = vim.uv.now()
+		else
+			local tick = vim.b[buf].changedtick
+			if state.ticks[buf] == nil then
+				-- First sight: do not mistake it for fresh output.
+				state.ticks[buf] = tick
+				if state.last_active[buf] == nil then
+					state.last_active[buf] = 0
+				end
+			elseif state.ticks[buf] ~= tick then
+				state.ticks[buf] = tick
+				state.last_active[buf] = vim.uv.now()
+			end
 		end
 	end
 end
@@ -208,8 +229,6 @@ local function board_win()
 	end
 	return nil
 end
-
-local home_tabpage, lend_deol
 
 -- The window session content is shown in: the one that was
 -- current when the board opened, else the widest ordinary
