@@ -55,6 +55,13 @@ local function terminal_bufs()
 	return bufs
 end
 
+-- Only sessions spawned from the board are managed (and
+-- listed); they carry the board's label variable. Terminals
+-- the user opened himself are not the board's business.
+local function managed(buf)
+	return vim.b[buf].agent_board_label ~= nil
+end
+
 local function job_running(buf)
 	local chan = vim.bo[buf].channel
 	if not chan or chan <= 0 then
@@ -112,7 +119,7 @@ local function sessions()
 		-- A terminal shown in no window belongs to a closed
 		-- tab (its buffer and job survive the tab); it is not
 		-- a live session anymore, so it leaves the list.
-		if #vim.fn.win_findbuf(buf) > 0 then
+		if #vim.fn.win_findbuf(buf) > 0 and managed(buf) then
 			local status, age
 			if not job_running(buf) then
 				status = 'exited'
@@ -139,7 +146,9 @@ end
 
 local function poll()
 	for _, buf in ipairs(terminal_bufs()) do
-		if #vim.fn.win_findbuf(buf) == 0 then
+		if not managed(buf) then
+			-- Not spawned from the board: leave it alone.
+		elseif #vim.fn.win_findbuf(buf) == 0 then
 			-- Shown nowhere. A dead job's buffer is wiped. A
 			-- deol terminal whose owning tab is gone is wiped
 			-- too: its deol died with the tab, so the session
