@@ -26,6 +26,12 @@ vim.keymap.set('n', '<Leader>tl', deol_command({ split = 'farleft' }), opt)
 
 vim.g["deol#extra_options"] = { term_finish = 'close' }
 
+-- Agent board (herdr-like session list for terminals)
+require('agent_board').setup()
+vim.keymap.set('n', '<Leader>ta', function()
+	require('agent_board').toggle()
+end, opt)
+
 vim.api.nvim_create_autocmd('FileType', {
 	pattern = { 'deol' },
 	callback = function()
