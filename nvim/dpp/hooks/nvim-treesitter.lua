@@ -13,12 +13,24 @@ ts.setup {
 	install_dir = vim.fn.expand('$XDG_CACHE_HOME/treesitter/parsers'),
 }
 
+-- Languages nvim-treesitter can provide parsers for. Plugin UI
+-- filetypes (ddu-ff, deol, ...) are not languages: passing them
+-- to ts.install only makes it warn "skipping unsupported
+-- language", so the autocmd below ignores them entirely.
+local available_langs = {}
+for _, lang in ipairs(require('nvim-treesitter.config').get_available()) do
+	available_langs[lang] = true
+end
+
 vim.api.nvim_create_autocmd("FileType", {
 	group = vim.api.nvim_create_augroup("UserTreesitter", { clear = true }),
 	callback = function(args)
 		local bufnr = args.buf
 		local ft = vim.bo[bufnr].filetype
 		local lang = vim.treesitter.language.get_lang(ft) or ft
+		if not available_langs[lang] then
+			return
+		end
 
 		-- Auto install if missing (mimic old auto_install)
 		local is_installed = #vim.api.nvim_get_runtime_file('parser/' .. lang .. '.so', false) > 0
