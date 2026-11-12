@@ -102,7 +102,7 @@ vim.api.nvim_create_autocmd('FileType', {
 		-- action removes the file from disk. That action lives
 		-- on `D` instead. In file lists `d` keeps 'delete'.
 		local function delete_item()
-			local items = vim.fn['ddu#ui#get_items']()
+			local items = vim.fn['ddu#ui#get_selected_items']()
 			if not (items[1] and items[1]['__sourceName'] == 'buffer') then
 				vim.fn['ddu#ui#do_action']('itemAction', { name = 'delete' })
 				return
