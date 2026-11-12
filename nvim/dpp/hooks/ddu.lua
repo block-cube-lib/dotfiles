@@ -118,7 +118,7 @@ vim.api.nvim_create_autocmd('FileType', {
 				end
 			end
 			if deleted then
-				vim.fn['ddu#ui#do_action']('refreshItems')
+				vim.fn['ddu#ui#do_action']('redraw', { method = 'refreshItems' })
 			end
 		end
 		vim.keymap.set('n', '<CR>', [[<Cmd>call ddu#ui#do_action('itemAction')<CR>]],
