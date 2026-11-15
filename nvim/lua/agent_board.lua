@@ -1,8 +1,14 @@
 -- agent_board.lua
 --
--- A herdr-like board for terminal sessions (mainly deol):
--- a sidebar listing every terminal buffer with a live state,
--- so multiple AI CLIs can be monitored without cycling tabs.
+-- A herdr-like board for AI CLI sessions: a sidebar listing
+-- the sessions it spawned, each with a live state, so several
+-- CLIs can be monitored and driven from one tab.
+--
+-- Sessions are plain Neovim terminal buffers owned by the
+-- board. They are created hidden -- no tab, no window -- and
+-- shown one at a time in the main window beside the board.
+-- (deol cannot do this: it keeps exactly one instance per
+-- tab. The user's own deol usage is untouched by this board.)
 --
 -- States come from output activity, tracked by polling each
 -- terminal buffer's changedtick:
@@ -10,14 +16,21 @@
 --   idle    : quiet (most likely waiting for input)
 --   exited  : the job has ended
 --
--- Board keys: <CR> jump, x kill session, q close, r refresh,
--- and the spawn keys in AGENTS below (new tab + deol + command).
+-- Board keys: <CR> show terminal, e compose input, x kill,
+-- q close, and the spawn keys in AGENTS below.
+--
+-- Each session has a compose buffer (e) for writing input
+-- with the user's usual insert-mode setup (e.g. skkeleton),
+-- since a raw terminal cannot offer that. Compose keys:
+-- <CR> send the current line, S send the whole buffer as one
+-- bracketed paste and clear it.
 
 local M = {}
 
 local WORKING_WINDOW_MS = 2500
 local POLL_MS = 1000
 local BOARD_FT = 'agentboard'
+local COMPOSE_FT = 'agentboard-compose'
 local BOARD_WIDTH = 44
 
 -- Spawn presets shown in the board header.
@@ -27,11 +40,10 @@ local AGENTS = {
 	{ key = 's', label = 'shell', command = nil },
 }
 
-local home_tabpage, lend_deol
-
 local state = {
 	ticks = {}, -- bufnr -> last seen changedtick
 	last_active = {}, -- bufnr -> uv.now() when output last seen
+	compose = {}, -- terminal bufnr -> compose bufnr
 	board_buf = nil,
 	timer = nil,
 	prev_win = nil,
@@ -116,10 +128,7 @@ local function sessions()
 	local now = vim.uv.now()
 	local list = {}
 	for _, buf in ipairs(terminal_bufs()) do
-		-- A terminal shown in no window belongs to a closed
-		-- tab (its buffer and job survive the tab); it is not
-		-- a live session anymore, so it leaves the list.
-		if #vim.fn.win_findbuf(buf) > 0 and managed(buf) then
+		if managed(buf) then
 			local status, age
 			if not job_running(buf) then
 				status = 'exited'
@@ -146,21 +155,7 @@ end
 
 local function poll()
 	for _, buf in ipairs(terminal_bufs()) do
-		if not managed(buf) then
-			-- Not spawned from the board: leave it alone.
-		elseif #vim.fn.win_findbuf(buf) == 0 then
-			-- Shown nowhere. A dead job's buffer is wiped. A
-			-- deol terminal whose owning tab is gone is wiped
-			-- too: its deol died with the tab, so the session
-			-- is over (deleting the buffer stops the job).
-			-- Plain live terminals are left alone, as Neovim
-			-- itself leaves them.
-			if not job_running(buf)
-				or (vim.bo[buf].filetype == 'deol'
-					and not home_tabpage(buf)) then
-				pcall(vim.api.nvim_buf_delete, buf, { force = true })
-			end
-		else
+		if managed(buf) then
 			local tick = vim.b[buf].changedtick
 			if state.ticks[buf] == nil then
 				-- First sight: do not mistake it for fresh output.
@@ -242,39 +237,38 @@ end
 -- The window session content is shown in: the one that was
 -- current when the board opened, else the widest ordinary
 -- window of this tab, else a fresh split beside the board.
--- Windows showing a deol-edit buffer are only a last resort:
--- they are an input slot, not a display slot.
+-- Windows showing a compose buffer are only a last resort
+-- for other content: they are an input slot, not a display
+-- slot (and the reverse when the target is a compose buffer:
+-- the tab's compose slot is reused).
 local function main_window(target_buf)
-	local for_edit = target_buf ~= nil
-		and vim.bo[target_buf].filetype == 'deol-edit'
+	local for_compose = target_buf ~= nil
+		and vim.bo[target_buf].filetype == COMPOSE_FT
 	local cur_tab = vim.api.nvim_get_current_tabpage()
-	local function usable(win, allow_edit)
+	local function usable(win, allow_compose)
 		return win and vim.api.nvim_win_is_valid(win)
 			and vim.api.nvim_win_get_tabpage(win) == cur_tab
 			and vim.api.nvim_win_get_buf(win) ~= state.board_buf
 			and vim.api.nvim_win_get_config(win).relative == ''
-			and (allow_edit
+			and (allow_compose
 				or vim.bo[vim.api.nvim_win_get_buf(win)].filetype
-					~= 'deol-edit')
+					~= COMPOSE_FT)
 	end
-	if for_edit then
-		-- Reuse the tab's edit slot if one is on screen, rather
-		-- than evicting the terminal window for a second edit
-		-- window.
+	if for_compose then
 		for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
 			local b = vim.api.nvim_win_get_buf(win)
-			if vim.bo[b].filetype == 'deol-edit' then
+			if vim.bo[b].filetype == COMPOSE_FT then
 				return win
 			end
 		end
 	end
-	if usable(state.prev_win, for_edit) then
+	if usable(state.prev_win, for_compose) then
 		return state.prev_win
 	end
-	for _, allow_edit in ipairs(for_edit and { true } or { false, true }) do
+	for _, allow_compose in ipairs(for_compose and { true } or { false, true }) do
 		local best, best_width = nil, -1
 		for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-			if usable(win, allow_edit) then
+			if usable(win, allow_compose) then
 				local width = vim.api.nvim_win_get_width(win)
 				if width > best_width then
 					best, best_width = win, width
@@ -311,57 +305,84 @@ local function jump()
 		return
 	end
 	show_in_main(buf)
-	local home = home_tabpage(buf)
-	if home then
-		lend_deol(home, buf)
-	end
 	if is_terminal(buf) then
 		vim.cmd('startinsert')
 	end
 end
 
--- Read a scalar field of a tab's deol instance without
--- converting the whole dict (it holds funcrefs) into Lua.
-local function deol_field(tab, key)
-	local nr = vim.api.nvim_tabpage_get_number(tab)
-	local ok, val = pcall(vim.api.nvim_eval, string.format(
-		"gettabvar(%d, 'deol', {})->get('%s', -1)", nr, key))
-	if ok and type(val) == 'number' then
-		return val
+-- The compose buffer of a session: a scratch buffer where
+-- input is written with the usual insert-mode setup and then
+-- sent to the session's channel.
+local function session_chan(term_buf)
+	if not term_buf or not vim.api.nvim_buf_is_valid(term_buf) then
+		return nil
 	end
-	return -1
-end
-
--- The tab that owns this terminal's deol instance, identified
--- exactly by the instance's own bufnr (not by what happens to
--- be visible where).
-home_tabpage = function(term_buf)
-	for _, tab in ipairs(vim.api.nvim_list_tabpages()) do
-		if deol_field(tab, '_agent_board_lent') ~= 1
-			and deol_field(tab, 'bufnr') == term_buf then
-			return tab
-		end
+	if not job_running(term_buf) then
+		return nil
+	end
+	local chan = vim.bo[term_buf].channel
+	if chan and chan > 0 then
+		return chan
 	end
 	return nil
 end
 
--- deol resolves its instance from the CURRENT tab (t:deol),
--- so while a session's buffers are shown here, this tab needs
--- a t:deol that points at that session; otherwise deol keys
--- used here (e, execute, ...) would go nowhere -- or worse,
--- to a previously shown session. AgentBoardLendDeol (defined
--- in setup) lends a copy() of the home tab's instance, marked
--- _agent_board_lent so it can be replaced when another
--- session is shown; a tab that owns a deol itself (unmarked)
--- is never overwritten, and the home instance is not mutated.
-lend_deol = function(home, term_buf)
-	local cur_tab = vim.api.nvim_get_current_tabpage()
-	if not home or home == cur_tab then
+local function compose_warn()
+	vim.notify('agent_board: session is not running', vim.log.levels.WARN)
+end
+
+local function send_line(compose_buf)
+	local chan = session_chan(vim.b[compose_buf].agent_board_session)
+	if not chan then
+		compose_warn()
 		return
 	end
-	local cur_nr = vim.api.nvim_tabpage_get_number(cur_tab)
-	local home_nr = vim.api.nvim_tabpage_get_number(home)
-	vim.fn.AgentBoardLendDeol(home_nr, cur_nr, term_buf)
+	vim.fn.chansend(chan, vim.api.nvim_get_current_line() .. '\r')
+	-- Step to the next line, appending a fresh one at the end,
+	-- so consecutive lines can be sent one after another.
+	local lnum = vim.api.nvim_win_get_cursor(0)[1]
+	local last = vim.api.nvim_buf_line_count(compose_buf)
+	if lnum == last then
+		vim.api.nvim_buf_set_lines(compose_buf, last, last, false, { '' })
+	end
+	vim.api.nvim_win_set_cursor(0, { lnum + 1, 0 })
+end
+
+local function send_all(compose_buf)
+	local chan = session_chan(vim.b[compose_buf].agent_board_session)
+	if not chan then
+		compose_warn()
+		return
+	end
+	local text = table.concat(
+		vim.api.nvim_buf_get_lines(compose_buf, 0, -1, false), '\n')
+	if text == '' then
+		return
+	end
+	-- Bracketed paste: the whole text lands as one paste
+	-- instead of one submit per line; the CR after the paste
+	-- submits it.
+	vim.fn.chansend(chan, '\27[200~' .. text .. '\27[201~\r')
+	vim.api.nvim_buf_set_lines(compose_buf, 0, -1, false, { '' })
+	vim.api.nvim_win_set_cursor(0, { 1, 0 })
+end
+
+local function compose_for(term_buf)
+	local c = state.compose[term_buf]
+	if c and vim.api.nvim_buf_is_valid(c) then
+		return c
+	end
+	c = vim.api.nvim_create_buf(false, true)
+	state.compose[term_buf] = c
+	vim.bo[c].buftype = 'nofile'
+	vim.bo[c].bufhidden = 'hide'
+	vim.bo[c].swapfile = false
+	vim.bo[c].filetype = COMPOSE_FT
+	vim.b[c].agent_board_session = term_buf
+	local opt = { noremap = true, silent = true, buffer = c }
+	vim.keymap.set('n', '<CR>', function() send_line(c) end, opt)
+	vim.keymap.set('n', 'S', function() send_all(c) end, opt)
+	return c
 end
 
 local function jump_edit()
@@ -369,94 +390,77 @@ local function jump_edit()
 	if not buf or not vim.api.nvim_buf_is_valid(buf) then
 		return
 	end
-	local home = home_tabpage(buf)
-	local edit_buf = nil
-	if home then
-		local nr = deol_field(home, 'edit_bufnr')
-		if nr > 0 and vim.api.nvim_buf_is_valid(nr) then
-			edit_buf = nr
-		end
-	end
-	if edit_buf then
-		show_in_main(edit_buf)
-		lend_deol(home, buf)
-		vim.cmd('startinsert')
-	elseif home then
-		-- No edit buffer yet: show the terminal here and let
-		-- deol's own 'e' mapping open the edit buffer in
-		-- this tab, against the lent instance.
-		show_in_main(buf)
-		lend_deol(home, buf)
-		vim.cmd('stopinsert')
-		vim.api.nvim_feedkeys('e', 'm', false)
-	else
-		jump()
-	end
+	show_in_main(compose_for(buf))
+	vim.cmd('startinsert')
 end
 
 local function kill()
 	local buf = state.line_map[vim.api.nvim_win_get_cursor(0)[1]]
 	if buf and vim.api.nvim_buf_is_valid(buf) then
+		local c = state.compose[buf]
+		state.compose[buf] = nil
+		if c and vim.api.nvim_buf_is_valid(c) then
+			pcall(vim.api.nvim_buf_delete, c, { force = true })
+		end
 		pcall(vim.api.nvim_buf_delete, buf, { force = true })
 		render()
 	end
 end
 
+-- A window to size a new terminal after: the one that was
+-- current when the board opened, else any ordinary window of
+-- this tab, else the board window itself.
+local function host_window()
+	local cur_tab = vim.api.nvim_get_current_tabpage()
+	local function ok(win)
+		return win and vim.api.nvim_win_is_valid(win)
+			and vim.api.nvim_win_get_tabpage(win) == cur_tab
+			and vim.api.nvim_win_get_buf(win) ~= state.board_buf
+			and vim.api.nvim_win_get_config(win).relative == ''
+	end
+	if ok(state.prev_win) then
+		return state.prev_win
+	end
+	for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+		if ok(win) then
+			return win
+		end
+	end
+	return board_win()
+end
+
 local function spawn(agent)
-	-- The board keeps the cursor: remember where we are, spawn
-	-- in a new tab, then come straight back.
-	local home_win = board_win()
-	local home_tab = home_win
-		and vim.api.nvim_win_get_tabpage(home_win) or nil
-	local home_line = home_win
-		and vim.api.nvim_win_get_cursor(home_win)[1] or nil
-	-- Snapshot before tabnew: deol converts the new tab's empty
-	-- buffer into the terminal, so it must count as "new" too.
-	local before = {}
-	for _, b in ipairs(vim.api.nvim_list_bufs()) do
-		before[b] = true
+	local win = board_win()
+	-- Create the terminal hidden: run termopen inside the new
+	-- buffer via buf_call in a host window (which also gives
+	-- the terminal a sensible initial size). No tab is made
+	-- and the board keeps the cursor.
+	local buf = vim.api.nvim_create_buf(false, true)
+	local host = host_window()
+	if host then
+		vim.api.nvim_set_current_win(host)
 	end
-	vim.cmd('tabnew')
-	-- Same base options as the deol hook's deol_command (an
-	-- empty table would reach Vim as a List, not a Dictionary).
-	vim.fn['deol#start']({
-		edit = true,
-		edit_filetype = 'deol-edit',
-		prompt_pattern = '> ',
-	})
-	-- With edit=true, deol leaves the cursor in the edit buffer;
-	-- the new terminal buffer is the one that just appeared.
-	local buf = nil
-	for _, b in ipairs(vim.api.nvim_list_bufs()) do
-		if not before[b] and is_terminal(b) then
-			buf = b
+	local cwd = vim.fn.getcwd()
+	vim.api.nvim_buf_call(buf, function()
+		vim.fn.termopen(vim.o.shell, { cwd = cwd })
+	end)
+	vim.b[buf].agent_board_label = agent.label
+	state.ticks[buf] = vim.b[buf].changedtick
+	state.last_active[buf] = vim.uv.now()
+	if agent.command then
+		local chan = vim.bo[buf].channel
+		if chan and chan > 0 then
+			-- Wait a moment for the shell prompt before typing.
+			vim.defer_fn(function()
+				if vim.api.nvim_buf_is_valid(buf) then
+					pcall(vim.fn.chansend, chan, agent.command .. '\r')
+				end
+			end, 300)
 		end
 	end
-	if buf then
-		vim.b[buf].agent_board_label = agent.label
-		state.ticks[buf] = vim.b[buf].changedtick
-		state.last_active[buf] = vim.uv.now()
-		if agent.command then
-			local chan = vim.bo[buf].channel
-			if chan and chan > 0 then
-				-- Wait a moment for the shell prompt before typing.
-				vim.defer_fn(function()
-					if vim.api.nvim_buf_is_valid(buf) then
-						pcall(vim.fn.chansend, chan, agent.command .. '\r')
-					end
-				end, 300)
-			end
-		end
-	end
-	-- Back to the board; the new session appears in the list.
-	if home_win and vim.api.nvim_win_is_valid(home_win) then
+	if win and vim.api.nvim_win_is_valid(win) then
 		vim.cmd('stopinsert')
-		vim.api.nvim_set_current_tabpage(home_tab)
-		vim.api.nvim_set_current_win(home_win)
-		if home_line then
-			pcall(vim.api.nvim_win_set_cursor,
-				home_win, { home_line, 0 })
-		end
+		vim.api.nvim_set_current_win(win)
 	end
 	render()
 end
@@ -505,16 +509,6 @@ function M.setup()
 		return
 	end
 	state.started = true
-	vim.cmd([[
-		function! AgentBoardLendDeol(home_nr, cur_nr, term_buf) abort
-			let cur = gettabvar(a:cur_nr, 'deol', {})
-			if cur == {} || cur->get('_agent_board_lent', 0)
-				let d = copy(gettabvar(a:home_nr, 'deol', {}))
-				let d._agent_board_lent = 1
-				call settabvar(a:cur_nr, 'deol', d)
-			endif
-		endfunction
-	]])
 	local timer = vim.uv.new_timer()
 	state.timer = timer
 	timer:start(POLL_MS, POLL_MS, vim.schedule_wrap(function()
@@ -525,14 +519,23 @@ function M.setup()
 		callback = function(ev)
 			state.ticks[ev.buf] = nil
 			state.last_active[ev.buf] = nil
+			-- A session buffer gone by other means takes its
+			-- compose buffer with it.
+			local c = state.compose[ev.buf]
+			if c then
+				state.compose[ev.buf] = nil
+				if vim.api.nvim_buf_is_valid(c) then
+					pcall(vim.api.nvim_buf_delete, c, { force = true })
+				end
+			end
 		end,
 	})
 end
 
 -- Exposed for tests.
-M._home_tabpage = home_tabpage
 M._sessions = sessions
 M._render = render
 M._poll = poll
+M._compose_for = compose_for
 
 return M
