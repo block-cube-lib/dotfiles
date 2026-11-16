@@ -25,7 +25,12 @@ name = 'skk-dict'
 
 [[plugins]]
 repo = 'vim-skk/skkeleton'
-on_event = 'InsertEnter'
+# CmdlineEnter too: the <C-j> toggle map is registered at
+# startup, so entering the command line before any InsertEnter
+# would expand it to a <Plug> that does not exist yet (the
+# literal text lands in the command line). Loading on
+# CmdlineEnter makes the toggle always available there.
+on_event = ['InsertEnter', 'CmdlineEnter']
 depends = ['denops.vim', 'skk-dict']
 hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/skkeleton.lua'
 
