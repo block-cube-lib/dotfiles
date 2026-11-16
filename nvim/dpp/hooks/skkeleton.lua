@@ -19,5 +19,12 @@ vim.api.nvim_create_autocmd({ 'User' }, {
 		vim.fn["skkeleton#initialize"]()
 	end,
 })
-vim.keymap.set({ 'i', 'c', 't' }, '<C-j>', [[<Plug>(skkeleton-toggle)]], { noremap = false })
+-- No 't' here: skkeleton is lazy-loaded on InsertEnter, so in
+-- a terminal buffer pressed before that, the <Plug> target
+-- does not exist yet and the literal text "(skkeleton-toggle)"
+-- is sent to the job. SKK input for terminals goes through
+-- insert-mode buffers anyway (deol-edit, the agent board's
+-- compose buffer); in a raw terminal <C-j> must reach the
+-- job as-is.
+vim.keymap.set({ 'i', 'c' }, '<C-j>', [[<Plug>(skkeleton-toggle)]], { noremap = false })
 -- }}}
