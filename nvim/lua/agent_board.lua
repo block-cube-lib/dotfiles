@@ -470,6 +470,26 @@ local function jump_edit()
 	vim.cmd('startinsert')
 end
 
+-- Delete a buffer without collapsing the layout: Neovim
+-- closes any window displaying a deleted buffer (see
+-- :h :bdelete), so windows showing it are first re-homed
+-- to their alternate buffer (or a fresh empty one).
+local function wipe_buffer(buf)
+	if not vim.api.nvim_buf_is_valid(buf) then
+		return
+	end
+	for _, win in ipairs(vim.fn.win_findbuf(buf)) do
+		local alt = vim.api.nvim_win_call(win, function()
+			return vim.fn.bufnr('#')
+		end)
+		if alt <= 0 or alt == buf or not vim.api.nvim_buf_is_valid(alt) then
+			alt = vim.api.nvim_create_buf(true, false)
+		end
+		pcall(vim.api.nvim_win_set_buf, win, alt)
+	end
+	pcall(vim.api.nvim_buf_delete, buf, { force = true })
+end
+
 local function kill()
 	local buf = state.line_map[vim.api.nvim_win_get_cursor(0)[1]]
 	if buf and vim.api.nvim_buf_is_valid(buf) then
@@ -478,10 +498,10 @@ local function kill()
 		end
 		local c = state.compose[buf]
 		state.compose[buf] = nil
-		if c and vim.api.nvim_buf_is_valid(c) then
-			pcall(vim.api.nvim_buf_delete, c, { force = true })
+		if c then
+			wipe_buffer(c)
 		end
-		pcall(vim.api.nvim_buf_delete, buf, { force = true })
+		wipe_buffer(buf)
 		render()
 	end
 end
@@ -610,9 +630,7 @@ function M.setup()
 			local c = state.compose[ev.buf]
 			if c then
 				state.compose[ev.buf] = nil
-				if vim.api.nvim_buf_is_valid(c) then
-					pcall(vim.api.nvim_buf_delete, c, { force = true })
-				end
+				wipe_buffer(c)
 			end
 		end,
 	})
