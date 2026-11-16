@@ -38,7 +38,9 @@ local BOARD_WIDTH = 44
 
 -- Spawn presets shown in the board header.
 local AGENTS = {
-	{ key = 'g', label = 'gemini', command = 'gemini' },
+	-- 'a', not 'g': a bare 'g' map would shadow every g-prefixed
+	-- command (gt/gT/gg) in the board buffer.
+	{ key = 'a', label = 'gemini', command = 'gemini' },
 	{ key = 'r', label = 'reviewer', command = 'gemini' },
 	{ key = 's', label = 'shell', command = nil },
 }
