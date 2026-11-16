@@ -17,7 +17,10 @@
 --   exited  : the job has ended
 --
 -- Board keys: <CR> show terminal, e compose input, x kill,
--- q close, and the spawn keys in AGENTS below.
+-- q close, and the spawn keys in AGENTS below. j/k move by
+-- session (each takes two lines), the main window previews
+-- the selected session without needing <CR>, and = restores
+-- the board width after an accidental resize.
 --
 -- Each session has a compose buffer (e) for writing input
 -- with the user's usual insert-mode setup (e.g. skkeleton),
@@ -48,6 +51,8 @@ local state = {
 	timer = nil,
 	prev_win = nil,
 	line_map = {}, -- board line number -> bufnr
+	head_lines = {}, -- board lines that start a session entry
+	preview_buf = nil, -- session currently previewed in main
 	started = false,
 }
 
@@ -189,10 +194,11 @@ local function render()
 		table.insert(keys, agent.key .. ':' .. agent.label)
 	end
 	local lines = {
-		'Agents  ' .. table.concat(keys, ' ') .. '  <CR>:jump e:edit x:kill q:close',
+		'Agents  ' .. table.concat(keys, ' ') .. '  <CR>:jump e:edit x:kill q:close =:size',
 		'',
 	}
 	local line_map = {}
+	local head_lines = {}
 	for _, s in ipairs(sessions()) do
 		local head = string.format(
 			'%s %-7s #%d %s%s',
@@ -204,6 +210,7 @@ local function render()
 		)
 		table.insert(lines, head)
 		line_map[#lines] = s.bufnr
+		table.insert(head_lines, #lines)
 		if s.tail ~= '' then
 			table.insert(lines, '    ' .. s.tail)
 			line_map[#lines] = s.bufnr
@@ -213,6 +220,7 @@ local function render()
 		table.insert(lines, '(no terminal sessions)')
 	end
 	state.line_map = line_map
+	state.head_lines = head_lines
 
 	local cursor_line = vim.api.nvim_win_get_cursor(win)[1]
 	vim.bo[buf].modifiable = true
@@ -305,8 +313,74 @@ local function jump()
 		return
 	end
 	show_in_main(buf)
+	state.preview_buf = buf
 	if is_terminal(buf) then
 		vim.cmd('startinsert')
+	end
+end
+
+local preview -- forward declaration; defined below
+
+-- j/k move by session, not by line: each session takes a
+-- status line and a tail line. From a tail line, k first
+-- goes to that session's own status line.
+local function move_selection(dir)
+	local heads = state.head_lines
+	if #heads == 0 then
+		return
+	end
+	local sign = dir > 0 and 1 or -1
+	local cur = vim.api.nvim_win_get_cursor(0)[1]
+	local idx = 0
+	for i, h in ipairs(heads) do
+		if h <= cur then
+			idx = i
+		end
+	end
+	-- One step first (with the tail-line rule for k), then
+	-- any extra count steps in the same direction.
+	local target
+	if sign > 0 then
+		target = math.min(idx + 1, #heads)
+	else
+		if idx > 0 and heads[idx] == cur then
+			target = math.max(idx - 1, 1)
+		else
+			target = math.max(idx, 1)
+		end
+	end
+	target = target + sign * (math.abs(dir) - 1)
+	target = math.max(1, math.min(target, #heads))
+	vim.api.nvim_win_set_cursor(0, { heads[target], 0 })
+	preview()
+end
+
+-- The main window follows the selection: moving in the board
+-- previews the session under the cursor there, without
+-- moving focus out of the board. Re-selecting the same
+-- session is a no-op, so a compose view of it survives
+-- wiggling between its two lines.
+preview = function()
+	local buf = state.line_map[vim.api.nvim_win_get_cursor(0)[1]]
+	if not buf or not vim.api.nvim_buf_is_valid(buf) then
+		return
+	end
+	if state.preview_buf == buf then
+		return
+	end
+	state.preview_buf = buf
+	local win = main_window(buf)
+	if vim.api.nvim_win_get_buf(win) ~= buf then
+		vim.api.nvim_win_set_buf(win, buf)
+	end
+end
+
+-- Undo an accidental resize: the board goes back to its
+-- fixed width and the main window takes the rest again.
+local function reset_layout()
+	local win = board_win()
+	if win then
+		vim.api.nvim_win_set_width(win, BOARD_WIDTH)
 	end
 end
 
@@ -397,6 +471,9 @@ end
 local function kill()
 	local buf = state.line_map[vim.api.nvim_win_get_cursor(0)[1]]
 	if buf and vim.api.nvim_buf_is_valid(buf) then
+		if state.preview_buf == buf then
+			state.preview_buf = nil
+		end
 		local c = state.compose[buf]
 		state.compose[buf] = nil
 		if c and vim.api.nvim_buf_is_valid(c) then
@@ -481,6 +558,13 @@ local function open()
 		vim.keymap.set('n', 'e', jump_edit, opt)
 		vim.keymap.set('n', 'x', kill, opt)
 		vim.keymap.set('n', 'q', function() M.toggle() end, opt)
+		vim.keymap.set('n', 'j', function() move_selection(vim.v.count1) end, opt)
+		vim.keymap.set('n', 'k', function() move_selection(-vim.v.count1) end, opt)
+		vim.keymap.set('n', '=', reset_layout, opt)
+		vim.api.nvim_create_autocmd('CursorMoved', {
+			buffer = buf,
+			callback = preview,
+		})
 		for _, agent in ipairs(AGENTS) do
 			vim.keymap.set('n', agent.key, function() spawn(agent) end, opt)
 		end
