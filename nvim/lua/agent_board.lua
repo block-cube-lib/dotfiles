@@ -337,6 +337,7 @@ local function jump()
 end
 
 local preview -- forward declaration; defined below
+local release_picker_window -- forward declaration; defined below
 
 -- j/k move by session, not by line: each session takes a
 -- status line and a tail line. From a tail line, k first
@@ -717,6 +718,17 @@ local function render_picker()
 	end
 end
 
+release_picker_window = function(p)
+	if not vim.api.nvim_win_is_valid(p.win) then
+		return
+	end
+	if p.created_win then
+		pcall(vim.api.nvim_win_close, p.win, true)
+	elseif vim.api.nvim_buf_is_valid(p.prev_buf) then
+		pcall(vim.api.nvim_win_set_buf, p.win, p.prev_buf)
+	end
+end
+
 local function close_picker()
 	local p = state.picker
 	if not p then
@@ -724,14 +736,7 @@ local function close_picker()
 	end
 	state.picker = nil
 	p.cancelled = true
-	if vim.api.nvim_win_is_valid(p.win) then
-		if p.created_win then
-			pcall(vim.api.nvim_win_close, p.win, true)
-		elseif vim.api.nvim_win_get_buf(p.win) == p.buf
-			and vim.api.nvim_buf_is_valid(p.prev_buf) then
-			pcall(vim.api.nvim_win_set_buf, p.win, p.prev_buf)
-		end
-	end
+	release_picker_window(p)
 	if vim.api.nvim_buf_is_valid(p.buf) then
 		pcall(vim.api.nvim_buf_delete, p.buf, { force = true })
 	end
@@ -996,7 +1001,10 @@ function M.setup()
 	vim.api.nvim_create_autocmd({ 'BufDelete', 'BufWipeout' }, {
 		callback = function(ev)
 			if state.picker and ev.buf == state.picker.buf then
+				local p = state.picker
 				state.picker = nil
+				p.cancelled = true
+				release_picker_window(p)
 			end
 			state.ticks[ev.buf] = nil
 			state.last_active[ev.buf] = nil
