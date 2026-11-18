@@ -19,12 +19,27 @@ vim.api.nvim_create_autocmd({ 'User' }, {
 		vim.fn["skkeleton#initialize"]()
 	end,
 })
--- No 't' here: skkeleton is lazy-loaded on InsertEnter, so in
--- a terminal buffer pressed before that, the <Plug> target
--- does not exist yet and the literal text "(skkeleton-toggle)"
--- is sent to the job. SKK input for terminals goes through
--- insert-mode buffers anyway (deol-edit, the agent board's
--- compose buffer); in a raw terminal <C-j> must reach the
--- job as-is.
 vim.keymap.set({ 'i', 'c' }, '<C-j>', [[<Plug>(skkeleton-toggle)]], { noremap = false })
+-- Terminal mode: skkeleton supports it (it ships a tnoremap
+-- for <Plug>(skkeleton-toggle) and replays its rewrites as
+-- terminal input), so <C-j> toggles there too -- but only
+-- once skkeleton has loaded. It is lazy-loaded on
+-- InsertEnter/CmdlineEnter, and feeding the <Plug> before
+-- that would leak the literal text "(skkeleton-toggle)"
+-- into the job, so until the target exists the raw key
+-- goes to the job as-is (a newline in gemini's input, a
+-- line feed in shells).
+vim.keymap.set('t', '<C-j>', function()
+	if vim.fn.maparg('<Plug>(skkeleton-toggle)', 't') == '' then
+		local job = vim.b.terminal_job_id
+		if job then
+			vim.fn.chansend(job, '\n')
+		end
+	else
+		vim.api.nvim_feedkeys(
+			vim.api.nvim_replace_termcodes(
+				'<Plug>(skkeleton-toggle)', true, false, true),
+			'm', false)
+	end
+end)
 -- }}}

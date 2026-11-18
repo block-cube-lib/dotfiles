@@ -30,7 +30,11 @@ repo = 'vim-skk/skkeleton'
 # would expand it to a <Plug> that does not exist yet (the
 # literal text lands in the command line). Loading on
 # CmdlineEnter makes the toggle always available there.
-on_event = ['InsertEnter', 'CmdlineEnter']
+# TermOpen too: the terminal <C-j> map falls back to a raw
+# line feed until skkeleton is loaded, so without a terminal
+# trigger the SKK toggle would stay unavailable in a
+# terminal opened before any insert or cmdline use.
+on_event = ['InsertEnter', 'CmdlineEnter', 'TermOpen']
 depends = ['denops.vim', 'skk-dict']
 hooks_file = '$XDG_CONFIG_HOME/nvim/dpp/hooks/skkeleton.lua'
 
