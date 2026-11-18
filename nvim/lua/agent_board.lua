@@ -24,11 +24,14 @@
 -- the selected session without needing <CR>, and = restores
 -- the board width after an accidental resize.
 --
--- Each session has a compose buffer (e) for writing input
--- with the user's usual insert-mode setup (e.g. skkeleton),
--- since a raw terminal cannot offer that. Compose keys:
+-- Each session has a compose buffer for writing input with
+-- the user's usual insert-mode setup (e.g. skkeleton), since
+-- a raw terminal cannot offer that. The compose buffer of
+-- the selected session is always shown in a small input
+-- strip under the main window, with the destination session
+-- in its winbar; e moves focus there. Compose keys:
 -- <CR> send the current line, S send the whole buffer as one
--- bracketed paste and clear it.
+-- bracketed paste and clear it, q back to the board.
 
 local M = {}
 
@@ -38,6 +41,7 @@ local BOARD_FT = 'agentboard'
 local COMPOSE_FT = 'agentboard-compose'
 local PICKER_FT = 'agentboard-picker'
 local BOARD_WIDTH = 44
+local STRIP_HEIGHT = 4
 
 -- Spawn presets shown in the board header.
 local AGENTS = {
@@ -61,6 +65,7 @@ local state = {
 	started = false,
 	picker = nil, -- resume picker state, while open
 	resume_seq = 0, -- supersedes stale picker list jobs
+	strip_win = nil, -- input strip window under the main window
 }
 
 local function is_terminal(buf)
@@ -186,6 +191,8 @@ end
 
 local MARKS = { working = '●', idle = '○', exited = '×' }
 
+local sync_strip -- forward declaration; defined below
+
 local function render()
 	local buf = state.board_buf
 	if not buf or not vim.api.nvim_buf_is_valid(buf) then
@@ -239,6 +246,7 @@ local function render()
 		cursor_line = #lines
 	end
 	vim.api.nvim_win_set_cursor(win, { cursor_line, 0 })
+	sync_strip()
 end
 
 local function board_win()
@@ -264,6 +272,7 @@ local function find_main_window(target_buf)
 	local cur_tab = vim.api.nvim_get_current_tabpage()
 	local function usable(win, allow_compose)
 		return win and vim.api.nvim_win_is_valid(win)
+			and win ~= state.strip_win
 			and vim.api.nvim_win_get_tabpage(win) == cur_tab
 			and vim.api.nvim_win_get_buf(win) ~= state.board_buf
 			and vim.api.nvim_win_get_config(win).relative == ''
@@ -274,7 +283,8 @@ local function find_main_window(target_buf)
 	if for_compose then
 		for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
 			local b = vim.api.nvim_win_get_buf(win)
-			if vim.bo[b].filetype == COMPOSE_FT then
+			if win ~= state.strip_win
+				and vim.bo[b].filetype == COMPOSE_FT then
 				return win
 			end
 		end
@@ -376,21 +386,20 @@ end
 -- The main window follows the selection: moving in the board
 -- previews the session under the cursor there, without
 -- moving focus out of the board. Re-selecting the same
--- session is a no-op, so a compose view of it survives
--- wiggling between its two lines.
+-- session does not touch the main window again.
 preview = function()
 	local buf = state.line_map[vim.api.nvim_win_get_cursor(0)[1]]
 	if not buf or not vim.api.nvim_buf_is_valid(buf) then
 		return
 	end
-	if state.preview_buf == buf then
-		return
+	if state.preview_buf ~= buf then
+		state.preview_buf = buf
+		local win = main_window(buf)
+		if vim.api.nvim_win_get_buf(win) ~= buf then
+			vim.api.nvim_win_set_buf(win, buf)
+		end
 	end
-	state.preview_buf = buf
-	local win = main_window(buf)
-	if vim.api.nvim_win_get_buf(win) ~= buf then
-		vim.api.nvim_win_set_buf(win, buf)
-	end
+	sync_strip()
 end
 
 -- Undo an accidental resize: the board goes back to its
@@ -474,7 +483,92 @@ local function compose_for(term_buf)
 	local opt = { noremap = true, silent = true, buffer = c }
 	vim.keymap.set('n', '<CR>', function() send_line(c) end, opt)
 	vim.keymap.set('n', 'S', function() send_all(c) end, opt)
+	vim.keymap.set('n', 'q', function()
+		local bw = board_win()
+		if bw then
+			vim.api.nvim_set_current_win(bw)
+		end
+	end, opt)
 	return c
+end
+
+local function close_strip()
+	local strip = state.strip_win
+	state.strip_win = nil
+	if strip and vim.api.nvim_win_is_valid(strip) then
+		pcall(vim.api.nvim_win_close, strip, true)
+	end
+end
+
+local function strip_label(term_buf)
+	local label = vim.b[term_buf].agent_board_label or '?'
+	local ref = vim.b[term_buf].agent_board_ref
+	return string.format('送信先: #%d %s%s',
+		term_buf, label, ref and (' [' .. ref .. ']') or '')
+end
+
+-- The input strip: a small window under the main window
+-- that always shows the compose buffer of the session the
+-- board points at (cursor session, else the previewed one,
+-- else the first), so input can be written without hiding
+-- the terminal. Its winbar names the destination, taken
+-- from the buffer actually shown so it never lies.
+sync_strip = function()
+	local bw = board_win()
+	if not bw then
+		close_strip()
+		return
+	end
+	local target = state.line_map[vim.api.nvim_win_get_cursor(bw)[1]]
+	if not target or not vim.api.nvim_buf_is_valid(target) then
+		target = state.preview_buf
+	end
+	if not target or not vim.api.nvim_buf_is_valid(target) then
+		local first = state.head_lines[1]
+		target = first and state.line_map[first] or nil
+	end
+	if not target then
+		close_strip()
+		return
+	end
+	-- No main window (e.g. it was closed): the strip has
+	-- nothing to sit under.
+	if not find_main_window(nil) then
+		close_strip()
+		return
+	end
+	local compose = compose_for(target)
+	local strip = state.strip_win
+	if strip and not vim.api.nvim_win_is_valid(strip) then
+		strip = nil
+		state.strip_win = nil
+	end
+	if not strip then
+		local main = find_main_window(nil)
+		if not main then
+			return
+		end
+		strip = vim.api.nvim_win_call(main, function()
+			vim.cmd('belowright split')
+			return vim.api.nvim_get_current_win()
+		end)
+		state.strip_win = strip
+		vim.api.nvim_win_set_height(strip, STRIP_HEIGHT)
+		vim.wo[strip].winfixheight = true
+		vim.wo[strip].number = false
+		vim.wo[strip].signcolumn = 'no'
+		vim.wo[strip].statusline = ' '
+	end
+	-- Never yank the buffer while the user is typing in it.
+	if vim.api.nvim_get_current_win() ~= strip
+		and vim.api.nvim_win_get_buf(strip) ~= compose then
+		vim.api.nvim_win_set_buf(strip, compose)
+	end
+	local shown = vim.api.nvim_win_get_buf(strip)
+	local sess = vim.b[shown].agent_board_session
+	if sess and vim.api.nvim_buf_is_valid(sess) then
+		vim.wo[strip].winbar = ' ' .. strip_label(sess)
+	end
 end
 
 local function jump_edit()
@@ -482,8 +576,12 @@ local function jump_edit()
 	if not buf or not vim.api.nvim_buf_is_valid(buf) then
 		return
 	end
-	show_in_main(compose_for(buf))
-	vim.cmd('startinsert')
+	sync_strip()
+	local strip = state.strip_win
+	if strip and vim.api.nvim_win_is_valid(strip) then
+		vim.api.nvim_set_current_win(strip)
+		vim.cmd('startinsert')
+	end
 end
 
 -- Delete a buffer without collapsing the layout: Neovim
@@ -981,6 +1079,7 @@ end
 function M.toggle()
 	local win = board_win()
 	if win then
+		close_strip()
 		pcall(vim.api.nvim_win_close, win, true)
 	else
 		open()
@@ -1000,6 +1099,9 @@ function M.setup()
 	end))
 	vim.api.nvim_create_autocmd({ 'BufDelete', 'BufWipeout' }, {
 		callback = function(ev)
+			if ev.buf == state.board_buf then
+				close_strip()
+			end
 			if state.picker and ev.buf == state.picker.buf then
 				local p = state.picker
 				state.picker = nil
@@ -1029,5 +1131,9 @@ M._spawn_resume = spawn_resume
 M._picker = function()
 	return state.picker
 end
+M._strip_win = function()
+	return state.strip_win
+end
+M._sync_strip = sync_strip
 
 return M
