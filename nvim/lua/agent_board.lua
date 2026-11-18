@@ -17,9 +17,9 @@
 --   exited  : the job has ended
 --
 -- Board keys: <CR> show terminal, e compose input, x kill,
--- q close, A resume a gemini session (picker over
--- `gemini --list-sessions`, with manual ID entry as a
--- fallback), and the spawn keys in AGENTS below. j/k move by
+-- q close, A resume a gemini session (opens the resume
+-- picker in the main window), and the spawn keys in
+-- AGENTS below. j/k move by
 -- session (each takes two lines), the main window previews
 -- the selected session without needing <CR>, and = restores
 -- the board width after an accidental resize.
@@ -36,6 +36,7 @@ local WORKING_WINDOW_MS = 2500
 local POLL_MS = 1000
 local BOARD_FT = 'agentboard'
 local COMPOSE_FT = 'agentboard-compose'
+local PICKER_FT = 'agentboard-picker'
 local BOARD_WIDTH = 44
 
 -- Spawn presets shown in the board header.
@@ -58,6 +59,8 @@ local state = {
 	head_lines = {}, -- board lines that start a session entry
 	preview_buf = nil, -- session currently previewed in main
 	started = false,
+	picker = nil, -- resume picker state, while open
+	resume_seq = 0, -- supersedes stale picker list jobs
 }
 
 local function is_terminal(buf)
@@ -255,7 +258,7 @@ end
 -- for other content: they are an input slot, not a display
 -- slot (and the reverse when the target is a compose buffer:
 -- the tab's compose slot is reused).
-local function main_window(target_buf)
+local function find_main_window(target_buf)
 	local for_compose = target_buf ~= nil
 		and vim.bo[target_buf].filetype == COMPOSE_FT
 	local cur_tab = vim.api.nvim_get_current_tabpage()
@@ -293,12 +296,20 @@ local function main_window(target_buf)
 			return best
 		end
 	end
+	return nil
+end
+
+local function main_window(target_buf)
+	local win = find_main_window(target_buf)
+	if win then
+		return win
+	end
 	vim.cmd('rightbelow vsplit')
-	local win = vim.api.nvim_get_current_win()
-	vim.wo[win].winfixwidth = false
-	vim.wo[win].signcolumn = 'auto'
-	vim.wo[win].cursorline = false
-	return win
+	local new_win = vim.api.nvim_get_current_win()
+	vim.wo[new_win].winfixwidth = false
+	vim.wo[new_win].signcolumn = 'auto'
+	vim.wo[new_win].cursorline = false
+	return new_win
 end
 
 local function show_in_main(buf)
@@ -572,17 +583,18 @@ local function spawn(agent, command, ref, spawn_cwd)
 	render()
 end
 
--- Resume an existing gemini session: sessions belong to
--- the current directory (gemini scopes them per project),
--- so the directory is captured once and used for both the
--- listing and the spawn. The picker runs
--- `gemini --list-sessions`; choosing an entry resumes by
--- its full UUID when the bracketed ID is one, else by its
--- index (exact at that instant, independent of whether the
--- bracketed ID shown is the full UUID or a prefix), and the
--- bracketed ID is kept as the session's display ref.
--- Manual entry takes a UUID, an index, or "latest", and is
--- the fallback when listing fails or finds nothing.
+-- Resume an existing gemini session: A opens a picker in
+-- the main window right away, showing a loading line while
+-- `gemini --list-sessions` runs (the CLI takes seconds).
+-- Sessions belong to the current directory (gemini scopes
+-- them per project), so the directory is captured once and
+-- used for both the listing and the spawn. The list is
+-- newest first and moves with j/k; <CR> resumes the entry
+-- under the cursor -- by its full UUID when the bracketed
+-- ID is one, else by its index (exact at that instant).
+-- The first row is manual entry: i edits it in place, and
+-- <CR> in insert mode confirms (a UUID, an index, or
+-- "latest"); it is also the fallback when listing fails.
 local function gemini_agent()
 	for _, agent in ipairs(AGENTS) do
 		if agent.key == 'a' then
@@ -616,36 +628,271 @@ local function resume_with(ref, display_ref, cwd)
 	spawn(agent, 'gemini --resume ' .. ref, display_ref, cwd)
 end
 
-local function resume_manual(cwd)
-	vim.ui.input({ prompt = 'Session ID / index / latest: ' }, function(input)
-		if not input then
-			return
+local function render_picker()
+	local p = state.picker
+	if not p or not vim.api.nvim_buf_is_valid(p.buf) then
+		return
+	end
+	-- Keep text typed into the manual row across re-renders
+	-- (the list may arrive while the user is editing it).
+	-- Only a line that already carries the edit prefix is
+	-- user input; the placeholder row is not.
+	if p.editing then
+		local line = vim.api.nvim_buf_get_lines(p.buf, 1, 2, false)[1]
+		if line and line:sub(1, 3) == 'ID:' then
+			p.edit_text = (line:gsub('^ID:%s*', ''))
 		end
-		input = vim.trim(input)
-		if input == '' then
-			return
+	end
+	local lines = {
+		'Resume gemini session  <CR>:resume i:input ID q:close',
+	}
+	local rows = {}
+	if p.editing then
+		table.insert(lines, 'ID: ' .. (p.edit_text or ''))
+	else
+		table.insert(lines, '[manual] i: enter a session ID / index / latest')
+	end
+	rows[#lines] = { kind = 'manual' }
+	if p.loading then
+		table.insert(lines, 'loading...')
+	elseif p.load_error then
+		table.insert(lines, '(could not list sessions; manual entry still works)')
+	elseif #p.sessions == 0 then
+		table.insert(lines, '(no sessions for this directory)')
+	else
+		-- Table-like rows: age, summary and session ID in
+		-- aligned columns, measured in display width so
+		-- Japanese summaries line up too.
+		local win = vim.fn.bufwinid(p.buf)
+		local total = win ~= -1 and vim.api.nvim_win_get_width(win) or 120
+		local age_w, id_w, sum_w = 0, 0, 0
+		for _, sess in ipairs(p.sessions) do
+			age_w = math.max(age_w, vim.fn.strdisplaywidth(sess.age))
+			id_w = math.max(id_w, vim.fn.strdisplaywidth(sess.id))
+			sum_w = math.max(sum_w, vim.fn.strdisplaywidth(sess.summary))
 		end
-		-- The value is typed into a terminal as a command;
-		-- keep it to the characters a session ref can have,
-		-- and never let it look like a gemini flag.
-		if input:sub(1, 1) == '-' or not input:match('^[%w%-%.]+$') then
-			vim.notify('agent_board: invalid session ID', vim.log.levels.WARN)
-			return
+		local summary_w = math.min(
+			sum_w, math.max(20, total - age_w - id_w - 4))
+		local function pad(str, w)
+			local d = vim.fn.strdisplaywidth(str)
+			if d < w then
+				return str .. string.rep(' ', w - d)
+			end
+			return str
 		end
-		resume_with(input, input, cwd)
-	end)
+		local function trunc(str, w)
+			while vim.fn.strdisplaywidth(str) > w - 1 do
+				str = vim.fn.strcharpart(str, 0, vim.fn.strchars(str) - 1)
+			end
+			return str .. '…'
+		end
+		for _, sess in ipairs(p.sessions) do
+			local summary = sess.summary
+			if vim.fn.strdisplaywidth(summary) > summary_w then
+				summary = trunc(summary, summary_w)
+			end
+			table.insert(lines, string.format(
+				'%s  %s  [%s]',
+				pad(sess.age, age_w),
+				pad(summary, summary_w),
+				sess.id))
+			rows[#lines] = { kind = 'session', index = sess.index, id = sess.id }
+		end
+	end
+	p.rows = rows
+	-- Keep the cursor where it was (the list arriving
+	-- mid-edit must not yank it to the top of the buffer).
+	local win = vim.fn.bufwinid(p.buf)
+	local cur
+	if win ~= -1 then
+		cur = vim.api.nvim_win_get_cursor(win)
+	end
+	vim.bo[p.buf].modifiable = true
+	vim.api.nvim_buf_set_lines(p.buf, 0, -1, false, lines)
+	vim.bo[p.buf].modifiable = p.editing
+	if win ~= -1 and cur then
+		cur[1] = math.min(cur[1], #lines)
+		cur[2] = math.min(cur[2], #(lines[cur[1]] or ''))
+		pcall(vim.api.nvim_win_set_cursor, win, cur)
+	end
+end
+
+local function close_picker()
+	local p = state.picker
+	if not p then
+		return
+	end
+	state.picker = nil
+	p.cancelled = true
+	if vim.api.nvim_win_is_valid(p.win) then
+		if p.created_win then
+			pcall(vim.api.nvim_win_close, p.win, true)
+		elseif vim.api.nvim_win_get_buf(p.win) == p.buf
+			and vim.api.nvim_buf_is_valid(p.prev_buf) then
+			pcall(vim.api.nvim_win_set_buf, p.win, p.prev_buf)
+		end
+	end
+	if vim.api.nvim_buf_is_valid(p.buf) then
+		pcall(vim.api.nvim_buf_delete, p.buf, { force = true })
+	end
+	local bw = board_win()
+	if bw then
+		vim.api.nvim_set_current_win(bw)
+	end
+end
+
+local function picker_move(dir)
+	local p = state.picker
+	if not p or p.editing then
+		return
+	end
+	local row_lines = {}
+	for line in pairs(p.rows or {}) do
+		table.insert(row_lines, line)
+	end
+	table.sort(row_lines)
+	if #row_lines == 0 then
+		return
+	end
+	local cur = vim.api.nvim_win_get_cursor(0)[1]
+	local idx = 1
+	for i, line in ipairs(row_lines) do
+		if line <= cur then
+			idx = i
+		end
+	end
+	local target = math.max(1, math.min(idx + dir, #row_lines))
+	vim.api.nvim_win_set_cursor(0, { row_lines[target], 0 })
+end
+
+local function start_edit()
+	local p = state.picker
+	if not p or p.editing then
+		return
+	end
+	p.editing = true
+	p.edit_text = ''
+	render_picker()
+	local win = vim.fn.bufwinid(p.buf)
+	if win ~= -1 then
+		vim.api.nvim_win_set_cursor(win, { 2, 4 })
+	end
+	vim.cmd('startinsert!')
+end
+
+local function cancel_edit()
+	local p = state.picker
+	if not p or not p.editing then
+		return
+	end
+	p.editing = false
+	p.edit_text = nil
+	vim.cmd('stopinsert')
+	render_picker()
+	local win = vim.fn.bufwinid(p.buf)
+	if win ~= -1 then
+		vim.api.nvim_win_set_cursor(win, { 2, 0 })
+	end
+end
+
+local function confirm_edit()
+	local p = state.picker
+	if not p or not p.editing then
+		return
+	end
+	local line = vim.api.nvim_buf_get_lines(p.buf, 1, 2, false)[1] or ''
+	local input = vim.trim((line:gsub('^ID:%s*', '')))
+	if input == '' then
+		cancel_edit()
+		return
+	end
+	-- The value is typed into a terminal as a command;
+	-- keep it to the characters a session ref can have,
+	-- and never let it look like a gemini flag.
+	if input:sub(1, 1) == '-' or not input:match('^[%w%-%.]+$') then
+		vim.notify('agent_board: invalid session ID', vim.log.levels.WARN)
+		return
+	end
+	p.editing = false
+	vim.cmd('stopinsert')
+	local cwd = p.cwd
+	close_picker()
+	resume_with(input, input, cwd)
+end
+
+local function picker_enter()
+	local p = state.picker
+	if not p or p.editing then
+		return
+	end
+	local item = (p.rows or {})[vim.api.nvim_win_get_cursor(0)[1]]
+	if not item then
+		return
+	end
+	if item.kind == 'manual' then
+		start_edit()
+		return
+	end
+	-- A full UUID cannot drift; a prefix cannot be resumed
+	-- by, so use the index.
+	local ref = item.id
+	if not (#ref == 36 and ref:match('^[%x%-]+$')) then
+		ref = tostring(item.index)
+	end
+	local cwd = p.cwd
+	close_picker()
+	resume_with(ref, item.id, cwd)
 end
 
 local function spawn_resume()
+	if state.picker then
+		close_picker()
+	end
 	local cwd = vim.fn.getcwd()
-	local settled = false
-	vim.defer_fn(function()
-		if not settled then
-			vim.notify(
-				'agent_board: listing gemini sessions...',
-				vim.log.levels.INFO)
-		end
-	end, 700)
+	state.resume_seq = state.resume_seq + 1
+	local win = find_main_window(nil)
+	local created_win = false
+	if not win then
+		win = main_window(nil)
+		created_win = true
+	end
+	local buf = vim.api.nvim_create_buf(false, true)
+	local p = {
+		buf = buf,
+		win = win,
+		prev_buf = vim.api.nvim_win_get_buf(win),
+		created_win = created_win,
+		cwd = cwd,
+		seq = state.resume_seq,
+		loading = true,
+		sessions = {},
+		editing = false,
+		cancelled = false,
+		rows = {},
+	}
+	state.picker = p
+	vim.bo[buf].filetype = PICKER_FT
+	vim.bo[buf].buftype = 'nofile'
+	vim.bo[buf].bufhidden = 'wipe'
+	vim.bo[buf].swapfile = false
+	vim.bo[buf].modifiable = false
+	local opt = { noremap = true, silent = true, buffer = buf }
+	vim.keymap.set('n', 'j', function() picker_move(vim.v.count1) end, opt)
+	vim.keymap.set('n', 'k', function() picker_move(-vim.v.count1) end, opt)
+	vim.keymap.set('n', '<CR>', picker_enter, opt)
+	vim.keymap.set('n', 'i', start_edit, opt)
+	vim.keymap.set('n', 'q', close_picker, opt)
+	vim.keymap.set('n', '<Esc>', close_picker, opt)
+	vim.keymap.set('i', '<CR>', confirm_edit, opt)
+	vim.keymap.set('i', '<Esc>', cancel_edit, opt)
+	vim.api.nvim_win_set_buf(win, buf)
+	vim.api.nvim_set_current_win(win)
+	vim.wo[win].number = false
+	vim.wo[win].signcolumn = 'no'
+	vim.wo[win].cursorline = true
+	render_picker()
+	vim.api.nvim_win_set_cursor(win, { 2, 0 })
+
 	local chunks, err_chunks = {}, {}
 	local job = vim.fn.jobstart({ 'gemini', '--list-sessions' }, {
 		cwd = cwd,
@@ -659,63 +906,32 @@ local function spawn_resume()
 		end,
 		on_exit = function(_, code)
 			vim.schedule(function()
-				settled = true
+				if state.picker ~= p or p.cancelled then
+					return
+				end
 				local found = code == 0 and parse_sessions(chunks) or {}
 				if #found == 0 then
 					-- Some versions print the list to stderr.
 					found = parse_sessions(err_chunks)
 				end
+				p.loading = false
 				if #found == 0 then
-					resume_manual(cwd)
-					return
-				end
-				local items = {}
-				for _, s in ipairs(found) do
-					table.insert(items, {
-						kind = 'session',
-						index = s.index,
-						id = s.id,
-						text = string.format(
-							'%s (%s) [%s]', s.summary, s.age, s.id),
-					})
-				end
-				table.insert(items, {
-					kind = 'latest',
-					text = 'latest (most recent session)',
-				})
-				table.insert(items, {
-					kind = 'manual',
-					text = 'Enter a session ID manually...',
-				})
-				vim.ui.select(items, {
-					prompt = 'Resume gemini session:',
-					format_item = function(item)
-						return item.text
-					end,
-				}, function(choice)
-					if not choice then
-						return
+					p.load_error = code ~= 0
+				else
+					local newest = {}
+					for i = #found, 1, -1 do
+						table.insert(newest, found[i])
 					end
-					if choice.kind == 'session' then
-						-- A full UUID cannot drift; a prefix
-						-- cannot be resumed by, so use the index.
-						local ref = choice.id
-						if not (#ref == 36 and ref:match('^[%x%-]+$')) then
-							ref = tostring(choice.index)
-						end
-						resume_with(ref, choice.id, cwd)
-					elseif choice.kind == 'latest' then
-						resume_with('latest', 'latest', cwd)
-					else
-						resume_manual(cwd)
-					end
-				end)
+					p.sessions = newest
+				end
+				render_picker()
 			end)
 		end,
 	})
 	if job <= 0 then
-		settled = true
-		resume_manual(cwd)
+		p.loading = false
+		p.load_error = true
+		render_picker()
 	end
 end
 
@@ -779,6 +995,9 @@ function M.setup()
 	end))
 	vim.api.nvim_create_autocmd({ 'BufDelete', 'BufWipeout' }, {
 		callback = function(ev)
+			if state.picker and ev.buf == state.picker.buf then
+				state.picker = nil
+			end
 			state.ticks[ev.buf] = nil
 			state.last_active[ev.buf] = nil
 			-- A session buffer gone by other means takes its
@@ -799,5 +1018,8 @@ M._poll = poll
 M._compose_for = compose_for
 M._parse_sessions = parse_sessions
 M._spawn_resume = spawn_resume
+M._picker = function()
+	return state.picker
+end
 
 return M
