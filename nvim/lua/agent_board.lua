@@ -17,7 +17,9 @@
 --   exited  : the job has ended
 --
 -- Board keys: <CR> show terminal, e compose input, x kill,
--- q close, and the spawn keys in AGENTS below. j/k move by
+-- q close, A resume a gemini session (picker over
+-- `gemini --list-sessions`, with manual ID entry as a
+-- fallback), and the spawn keys in AGENTS below. j/k move by
 -- session (each takes two lines), the main window previews
 -- the selected session without needing <CR>, and = restores
 -- the board width after an accidental resize.
@@ -154,6 +156,7 @@ local function sessions()
 				status = status,
 				age = age,
 				tail = tail_line(buf),
+				ref = vim.b[buf].agent_board_ref,
 			})
 		end
 	end
@@ -196,19 +199,20 @@ local function render()
 		table.insert(keys, agent.key .. ':' .. agent.label)
 	end
 	local lines = {
-		'Agents  ' .. table.concat(keys, ' ') .. '  <CR>:jump e:edit x:kill q:close =:size',
+		'Agents  ' .. table.concat(keys, ' ') .. '  <CR>:jump e:edit x:kill q:close =:size A:resume',
 		'',
 	}
 	local line_map = {}
 	local head_lines = {}
 	for _, s in ipairs(sessions()) do
 		local head = string.format(
-			'%s %-7s #%d %s%s',
+			'%s %-7s #%d %s%s%s',
 			MARKS[s.status],
 			s.status,
 			s.bufnr,
 			s.label,
-			s.age and ('  (' .. s.age .. ')') or ''
+			s.age and ('  (' .. s.age .. ')') or '',
+			s.ref and (' [' .. s.ref .. ']') or ''
 		)
 		table.insert(lines, head)
 		line_map[#lines] = s.bufnr
@@ -528,7 +532,7 @@ local function host_window()
 	return board_win()
 end
 
-local function spawn(agent)
+local function spawn(agent, command, ref, spawn_cwd)
 	local win = board_win()
 	-- Create the terminal hidden: run termopen inside the new
 	-- buffer via buf_call in a host window (which also gives
@@ -539,20 +543,24 @@ local function spawn(agent)
 	if host then
 		vim.api.nvim_set_current_win(host)
 	end
-	local cwd = vim.fn.getcwd()
+	local cwd = spawn_cwd or vim.fn.getcwd()
 	vim.api.nvim_buf_call(buf, function()
 		vim.fn.termopen(vim.o.shell, { cwd = cwd })
 	end)
 	vim.b[buf].agent_board_label = agent.label
+	if ref then
+		vim.b[buf].agent_board_ref = ref
+	end
 	state.ticks[buf] = vim.b[buf].changedtick
 	state.last_active[buf] = vim.uv.now()
-	if agent.command then
+	local send = command or agent.command
+	if send then
 		local chan = vim.bo[buf].channel
 		if chan and chan > 0 then
 			-- Wait a moment for the shell prompt before typing.
 			vim.defer_fn(function()
 				if vim.api.nvim_buf_is_valid(buf) then
-					pcall(vim.fn.chansend, chan, agent.command .. '\r')
+					pcall(vim.fn.chansend, chan, send .. '\r')
 				end
 			end, 300)
 		end
@@ -562,6 +570,143 @@ local function spawn(agent)
 		vim.api.nvim_set_current_win(win)
 	end
 	render()
+end
+
+-- Resume an existing gemini session: sessions belong to
+-- the current directory (gemini scopes them per project),
+-- so the directory is captured once and used for both the
+-- listing and the spawn. The picker runs
+-- `gemini --list-sessions`; choosing an entry resumes by
+-- its full UUID when the bracketed ID is one, else by its
+-- index (exact at that instant, independent of whether the
+-- bracketed ID shown is the full UUID or a prefix), and the
+-- bracketed ID is kept as the session's display ref.
+-- Manual entry takes a UUID, an index, or "latest", and is
+-- the fallback when listing fails or finds nothing.
+local function gemini_agent()
+	for _, agent in ipairs(AGENTS) do
+		if agent.key == 'a' then
+			return agent
+		end
+	end
+end
+
+local function parse_sessions(lines)
+	local found = {}
+	for _, line in ipairs(lines) do
+		local index, summary, age, id =
+			line:match('^%s*(%d+)%.%s+(.-)%s+%((.-)%)%s+%[(.-)%]%s*$')
+		if index then
+			table.insert(found, {
+				index = tonumber(index),
+				summary = summary,
+				age = age,
+				id = id,
+			})
+		end
+	end
+	return found
+end
+
+local function resume_with(ref, display_ref, cwd)
+	local agent = gemini_agent()
+	if not agent then
+		return
+	end
+	spawn(agent, 'gemini --resume ' .. ref, display_ref, cwd)
+end
+
+local function resume_manual(cwd)
+	vim.ui.input({ prompt = 'Session ID / index / latest: ' }, function(input)
+		if not input then
+			return
+		end
+		input = vim.trim(input)
+		if input == '' then
+			return
+		end
+		-- The value is typed into a terminal as a command;
+		-- keep it to the characters a session ref can have,
+		-- and never let it look like a gemini flag.
+		if input:sub(1, 1) == '-' or not input:match('^[%w%-%.]+$') then
+			vim.notify('agent_board: invalid session ID', vim.log.levels.WARN)
+			return
+		end
+		resume_with(input, input, cwd)
+	end)
+end
+
+local function spawn_resume()
+	local cwd = vim.fn.getcwd()
+	local chunks, err_chunks = {}, {}
+	local job = vim.fn.jobstart({ 'gemini', '--list-sessions' }, {
+		cwd = cwd,
+		stdout_buffered = true,
+		stderr_buffered = true,
+		on_stdout = function(_, data)
+			chunks = data
+		end,
+		on_stderr = function(_, data)
+			err_chunks = data
+		end,
+		on_exit = function(_, code)
+			vim.schedule(function()
+				local found = code == 0 and parse_sessions(chunks) or {}
+				if #found == 0 then
+					-- Some versions print the list to stderr.
+					found = parse_sessions(err_chunks)
+				end
+				if #found == 0 then
+					resume_manual(cwd)
+					return
+				end
+				local items = {}
+				for _, s in ipairs(found) do
+					table.insert(items, {
+						kind = 'session',
+						index = s.index,
+						id = s.id,
+						text = string.format(
+							'%d. %s (%s) [%s]', s.index, s.summary, s.age, s.id),
+					})
+				end
+				table.insert(items, {
+					kind = 'latest',
+					text = 'latest (most recent session)',
+				})
+				table.insert(items, {
+					kind = 'manual',
+					text = 'Enter a session ID manually...',
+				})
+				vim.ui.select(items, {
+					prompt = 'Resume gemini session:',
+					format_item = function(item)
+						return item.text
+					end,
+				}, function(choice)
+					if not choice then
+						return
+					end
+					if choice.kind == 'session' then
+						-- A full UUID cannot drift; a prefix
+						-- cannot be resumed by, so use the index.
+						local ref = choice.id
+						if not (#ref == 36 and ref:match('^[%x%-]+$')) then
+							ref = tostring(choice.index)
+						end
+						resume_with(ref, choice.id, cwd)
+					elseif choice.kind == 'latest' then
+						resume_with('latest', 'latest', cwd)
+					else
+						resume_manual(cwd)
+					end
+				end)
+			end)
+		end,
+	})
+	if job <= 0 then
+		resume_manual(cwd)
+	end
 end
 
 local function open()
@@ -590,6 +735,7 @@ local function open()
 		for _, agent in ipairs(AGENTS) do
 			vim.keymap.set('n', agent.key, function() spawn(agent) end, opt)
 		end
+		vim.keymap.set('n', 'A', spawn_resume, opt)
 	end
 	vim.cmd('topleft vertical split')
 	vim.api.nvim_win_set_buf(0, state.board_buf)
@@ -641,5 +787,7 @@ M._sessions = sessions
 M._render = render
 M._poll = poll
 M._compose_for = compose_for
+M._parse_sessions = parse_sessions
+M._spawn_resume = spawn_resume
 
 return M
