@@ -638,6 +638,14 @@ end
 
 local function spawn_resume()
 	local cwd = vim.fn.getcwd()
+	local settled = false
+	vim.defer_fn(function()
+		if not settled then
+			vim.notify(
+				'agent_board: listing gemini sessions...',
+				vim.log.levels.INFO)
+		end
+	end, 700)
 	local chunks, err_chunks = {}, {}
 	local job = vim.fn.jobstart({ 'gemini', '--list-sessions' }, {
 		cwd = cwd,
@@ -651,6 +659,7 @@ local function spawn_resume()
 		end,
 		on_exit = function(_, code)
 			vim.schedule(function()
+				settled = true
 				local found = code == 0 and parse_sessions(chunks) or {}
 				if #found == 0 then
 					-- Some versions print the list to stderr.
@@ -667,7 +676,7 @@ local function spawn_resume()
 						index = s.index,
 						id = s.id,
 						text = string.format(
-							'%d. %s (%s) [%s]', s.index, s.summary, s.age, s.id),
+							'%s (%s) [%s]', s.summary, s.age, s.id),
 					})
 				end
 				table.insert(items, {
@@ -705,6 +714,7 @@ local function spawn_resume()
 		end,
 	})
 	if job <= 0 then
+		settled = true
 		resume_manual(cwd)
 	end
 end
