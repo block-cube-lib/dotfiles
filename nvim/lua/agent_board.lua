@@ -58,6 +58,29 @@ local AGENTS = {
 	{ key = 's', label = 'shell', command = nil },
 }
 
+-- Colours: session heads take a foreground by kind, and
+-- every line of a group takes a background tint by the
+-- group's position (cycling). Redefine the AgentBoard*
+-- highlight groups to restyle.
+local HL_NS = vim.api.nvim_create_namespace('agent_board_hl')
+local KIND_HL = {
+	gemini = 'AgentBoardGemini',
+	reviewer = 'AgentBoardReviewer',
+	shell = 'AgentBoardShell',
+}
+local GROUP_BGS = {
+	'#232a3d', '#2a2338', '#1f3030',
+	'#33301f', '#38261f', '#24331f',
+}
+local function define_highlights()
+	vim.api.nvim_set_hl(0, 'AgentBoardGemini', { fg = '#7aa2f7' })
+	vim.api.nvim_set_hl(0, 'AgentBoardReviewer', { fg = '#bb9af7' })
+	vim.api.nvim_set_hl(0, 'AgentBoardShell', { fg = '#9ece6a' })
+	for i, bg in ipairs(GROUP_BGS) do
+		vim.api.nvim_set_hl(0, 'AgentBoardGroup' .. i, { bg = bg })
+	end
+end
+
 local state = {
 	ticks = {}, -- bufnr -> last seen changedtick
 	last_active = {}, -- bufnr -> uv.now() when output last seen
@@ -360,6 +383,7 @@ local function render()
 
 	local line_map = {}
 	local head_lines = {}
+	local head_kind = {}
 	local line_group = {}
 	local stop_lines = {}
 	local new_row_line = nil
@@ -394,6 +418,7 @@ local function render()
 					sess.ref and (' [' .. sess.ref .. ']') or ''
 				)
 				table.insert(lines, head)
+				head_kind[#lines] = sess.label
 				line_map[#lines] = sess.bufnr
 				line_group[#lines] = g
 				table.insert(head_lines, #lines)
@@ -423,6 +448,29 @@ local function render()
 	vim.bo[buf].modifiable = true
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
 	vim.bo[buf].modifiable = false
+	vim.api.nvim_buf_clear_namespace(buf, HL_NS, 0, -1)
+	local group_index = {}
+	for i, g in ipairs(groups) do
+		group_index[g] = (i - 1) % #GROUP_BGS + 1
+	end
+	for line, g in pairs(line_group) do
+		vim.api.nvim_buf_set_extmark(buf, HL_NS, line - 1, 0, {
+			line_hl_group = 'AgentBoardGroup'
+				.. (group_index[g] or 1),
+			priority = 10,
+		})
+	end
+	for line, label in pairs(head_kind) do
+		local hl = KIND_HL[label]
+		if hl then
+			vim.api.nvim_buf_set_extmark(buf, HL_NS, line - 1, 0, {
+				end_row = line,
+				strict = false,
+				hl_group = hl,
+				priority = 20,
+			})
+		end
+	end
 	if cursor_line > #lines then
 		cursor_line = #lines
 	end
@@ -1380,6 +1428,11 @@ function M.toggle()
 end
 
 function M.setup()
+	define_highlights()
+	vim.api.nvim_create_autocmd('ColorScheme', {
+		group = vim.api.nvim_create_augroup('agent_board_hl', {}),
+		callback = define_highlights,
+	})
 	if state.started then
 		return
 	end
