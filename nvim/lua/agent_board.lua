@@ -915,11 +915,48 @@ end
 -- Spawn from the board: into the group under the cursor.
 -- On the new-worktree row, gemini presets ask for a name
 -- and spawn gemini -w <name> at the repo root instead.
+local function worktrees_enabled(root)
+	local function enabled_in(path)
+		if vim.fn.filereadable(path) == 0 then
+			return false
+		end
+		local ok, text = pcall(vim.fn.readfile, path)
+		if not ok then
+			return nil
+		end
+		local okj, data = pcall(vim.fn.json_decode,
+			table.concat(text, '\n'))
+		if not okj or type(data) ~= 'table' then
+			return nil
+		end
+		return type(data.experimental) == 'table'
+			and data.experimental.worktrees == true
+	end
+	local user = enabled_in(vim.fn.expand('~/.gemini/settings.json'))
+	if user then
+		return true
+	end
+	local proj = enabled_in(root .. '/.gemini/settings.json')
+	if proj then
+		return true
+	end
+	if user == nil or proj == nil then
+		return true
+	end
+	return false
+end
+
 local function spawn_new_worktree(agent)
 	local wt = worktrees_for(vim.fn.getcwd())
 	if not wt then
 		vim.notify('agent_board: not a git repository',
 			vim.log.levels.WARN)
+		return
+	end
+	if not worktrees_enabled(wt.root) then
+		vim.notify('agent_board: gemini worktrees not enabled; '
+			.. 'set experimental.worktrees=true in '
+			.. '~/.gemini/settings.json', vim.log.levels.WARN)
 		return
 	end
 	vim.ui.input({ prompt = 'New worktree name: ' }, function(name)
