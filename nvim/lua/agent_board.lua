@@ -18,10 +18,13 @@
 --
 -- Board keys: <CR> show terminal, e compose input, x kill,
 -- q close, A resume a gemini session (opens the resume
--- picker in the main window), W choose the spawn directory
--- from the repo's git worktrees (spawn keys and A then work
--- there; shown as a Dir: line in the board), and the spawn
--- keys in AGENTS below. j/k move by
+-- picker in the main window), and the spawn keys in
+-- AGENTS below. Sessions are grouped by directory: in a
+-- git repo the groups are its worktrees (gemini worktrees
+-- under .gemini/worktrees included), each with its session
+-- count, and the spawn keys and A act on the group under
+-- the cursor. A [+ new worktree] row at the bottom starts
+-- gemini -w with a fresh name. j/k move by
 -- session (each takes two lines), the main window previews
 -- the selected session without needing <CR>, and = restores
 -- the board width after an accidental resize.
@@ -43,7 +46,6 @@ local POLL_MS = 1000
 local BOARD_FT = 'agentboard'
 local COMPOSE_FT = 'agentboard-compose'
 local PICKER_FT = 'agentboard-picker'
-local WT_FT = 'agentboard-wtpicker'
 local BOARD_WIDTH = 44
 local STRIP_HEIGHT = 4
 
@@ -70,8 +72,11 @@ local state = {
 	picker = nil, -- resume picker state, while open
 	resume_seq = 0, -- supersedes stale picker list jobs
 	strip_win = nil, -- input strip window under the main window
-	spawn_dir = nil, -- directory spawns/A work in (nil = Neovim cwd)
-	wt_picker = nil, -- worktree picker state, while open
+	groups = {}, -- worktree/directory groups from the last render
+	line_group = {}, -- board line number -> group
+	stop_lines = {}, -- lines j/k stop on (group heads, session heads, new row)
+	new_row_line = nil, -- board line of the [+ new worktree] row
+	wt_cache = nil, -- cached git worktree list (5 s)
 }
 
 local function is_terminal(buf)
@@ -120,6 +125,30 @@ local function derive_label(buf)
 	return name
 end
 
+local function norm_dir(p)
+	if not p or p == '' then
+		return nil
+	end
+	p = vim.fn.resolve(vim.fn.fnamemodify(p, ':p'))
+	if #p > 1 then
+		p = p:gsub('/$', '')
+	end
+	return p
+end
+
+-- The directory a session belongs to: the worktree a
+-- gemini -w spawn was started for, else the terminal's
+-- own cwd from its buffer name.
+local function session_dir(buf)
+	local g = vim.b[buf].agent_board_group
+	if g and g ~= '' then
+		return norm_dir(g)
+	end
+	local name = vim.api.nvim_buf_get_name(buf)
+	local cwd = name:match('^term://(.+)//%d+:.*$')
+	return cwd and norm_dir(cwd) or nil
+end
+
 local function tail_line(buf)
 	local lines = vim.api.nvim_buf_get_lines(buf, -31, -1, false)
 	for i = #lines, 1, -1 do
@@ -166,6 +195,7 @@ local function sessions()
 			end
 			table.insert(list, {
 				bufnr = buf,
+				dir = session_dir(buf),
 				label = derive_label(buf),
 				status = status,
 				age = age,
@@ -198,7 +228,78 @@ end
 local MARKS = { working = '●', idle = '○', exited = '×' }
 
 local sync_strip -- forward declaration; defined below
-local close_wt_picker -- forward declaration; defined below
+
+
+-- git worktree list of a directory, or nil outside a repo.
+local function list_worktrees(dir)
+	local out = vim.fn.systemlist(
+		{ 'git', '-C', dir, 'worktree', 'list', '--porcelain' })
+	if vim.v.shell_error ~= 0 then
+		return nil
+	end
+	local trees, cur = {}, nil
+	for _, line in ipairs(out) do
+		local path = line:match('^worktree (.+)$')
+		if path then
+			cur = { path = path, branch = '' }
+			table.insert(trees, cur)
+		elseif cur then
+			local branch = line:match('^branch refs/heads/(.+)$')
+			if branch then
+				cur.branch = branch
+			elseif line == 'detached' then
+				cur.branch = '(detached)'
+			end
+		end
+	end
+	return trees
+end
+
+-- The worktrees of cwd's repo, cached for 5 s (render runs
+-- every second; a git call per render would be waste).
+-- Returns { root = <main worktree path>, trees = {...} }
+-- with normalized paths, or nil outside a repo.
+local function worktrees_for(cwd)
+	local key = norm_dir(cwd)
+	local now = vim.uv.now()
+	local cache = state.wt_cache
+	if cache and cache.key == key and now - cache.at <= 5000 then
+		return cache.data
+	end
+	local trees = list_worktrees(cwd)
+	local data = nil
+	if trees and #trees > 0 then
+		local normed = {}
+		for _, t in ipairs(trees) do
+			table.insert(normed,
+				{ path = norm_dir(t.path), branch = t.branch })
+		end
+		data = { root = normed[1].path, trees = normed }
+	end
+	state.wt_cache = { key = key, at = now, data = data }
+	return data
+end
+
+local function trunc_line(text, width)
+	while vim.fn.strdisplaywidth(text) > width do
+		text = vim.fn.strcharpart(text, 0, vim.fn.strchars(text) - 1)
+	end
+	return text
+end
+
+local function group_name(g, wt)
+	if wt then
+		local prefix = wt.root .. '/.gemini/worktrees/'
+		if g.path:sub(1, #prefix) == prefix then
+			return g.path:sub(#prefix + 1)
+		end
+	end
+	local base = vim.fn.fnamemodify(g.path, ':t')
+	if base == '' then
+		return g.path
+	end
+	return base
+end
 
 local function render()
 	local buf = state.board_buf
@@ -216,36 +317,94 @@ local function render()
 		table.insert(keys, agent.key .. ':' .. agent.label)
 	end
 	local lines = {
-		'Agents  ' .. table.concat(keys, ' ') .. '  <CR>:jump e:edit x:kill q:close =:size A:resume W:worktree',
-		state.spawn_dir
-			and ('Dir: ' .. vim.fn.fnamemodify(state.spawn_dir, ':~'))
-			or '',
+		'Agents  ' .. table.concat(keys, ' ') .. '  <CR>:jump e:edit x:kill q:close =:size A:resume',
+		'',
 	}
-	local line_map = {}
-	local head_lines = {}
-	for _, s in ipairs(sessions()) do
-		local head = string.format(
-			'%s %-7s #%d %s%s%s',
-			MARKS[s.status],
-			s.status,
-			s.bufnr,
-			s.label,
-			s.age and ('  (' .. s.age .. ')') or '',
-			s.ref and (' [' .. s.ref .. ']') or ''
-		)
-		table.insert(lines, head)
-		line_map[#lines] = s.bufnr
-		table.insert(head_lines, #lines)
-		if s.tail ~= '' then
-			table.insert(lines, '    ' .. s.tail)
-			line_map[#lines] = s.bufnr
+	local cwd = vim.fn.getcwd()
+	local cwd_group = norm_dir(cwd)
+	local wt = worktrees_for(cwd)
+	-- Groups: the repo's worktrees first (main first), then
+	-- any other directory a session lives in, first-seen.
+	local groups, by_path = {}, {}
+	local function group_for(path, branch)
+		local g = by_path[path]
+		if not g then
+			g = { path = path, branch = branch, sessions = {} }
+			by_path[path] = g
+			table.insert(groups, g)
+		end
+		return g
+	end
+	if wt then
+		for _, t in ipairs(wt.trees) do
+			group_for(t.path, t.branch)
 		end
 	end
-	if #lines == 2 then
+	for _, sess in ipairs(sessions()) do
+		local g = group_for(sess.dir or cwd_group)
+		table.insert(g.sessions, sess)
+	end
+
+	local line_map = {}
+	local head_lines = {}
+	local line_group = {}
+	local stop_lines = {}
+	local new_row_line = nil
+	if #groups == 0 then
 		table.insert(lines, '(no terminal sessions)')
+	else
+		for _, g in ipairs(groups) do
+			local parts = { group_name(g, wt) }
+			if g.branch and g.branch ~= '' then
+				table.insert(parts, '[' .. g.branch .. ']')
+			end
+			if g.path == cwd_group then
+				table.insert(parts, '(cwd)')
+			end
+			table.insert(parts, '(' .. #g.sessions .. ')')
+			table.insert(lines,
+				trunc_line(table.concat(parts, ' '), 42))
+			line_group[#lines] = g
+			table.insert(stop_lines, #lines)
+			if #g.sessions == 0 then
+				table.insert(lines, '    (no sessions)')
+				line_group[#lines] = g
+			end
+			for _, sess in ipairs(g.sessions) do
+				local head = string.format(
+					'%s %-7s #%d %s%s%s',
+					MARKS[sess.status],
+					sess.status,
+					sess.bufnr,
+					sess.label,
+					sess.age and ('  (' .. sess.age .. ')') or '',
+					sess.ref and (' [' .. sess.ref .. ']') or ''
+				)
+				table.insert(lines, head)
+				line_map[#lines] = sess.bufnr
+				line_group[#lines] = g
+				table.insert(head_lines, #lines)
+				table.insert(stop_lines, #lines)
+				if sess.tail ~= '' then
+					table.insert(lines, '    ' .. sess.tail)
+					line_map[#lines] = sess.bufnr
+					line_group[#lines] = g
+				end
+			end
+		end
+		if wt then
+			table.insert(lines, '')
+			table.insert(lines, '[+ new worktree]  a: gemini -w')
+			new_row_line = #lines
+			table.insert(stop_lines, #lines)
+		end
 	end
 	state.line_map = line_map
 	state.head_lines = head_lines
+	state.line_group = line_group
+	state.stop_lines = stop_lines
+	state.groups = groups
+	state.new_row_line = new_row_line
 
 	local cursor_line = vim.api.nvim_win_get_cursor(win)[1]
 	vim.bo[buf].modifiable = true
@@ -358,38 +517,49 @@ end
 local preview -- forward declaration; defined below
 local release_picker_window -- forward declaration; defined below
 
--- j/k move by session, not by line: each session takes a
--- status line and a tail line. From a tail line, k first
--- goes to that session's own status line.
+-- j/k move by stop line: group headers, session heads and
+-- the new-worktree row are stops; a session's tail line is
+-- not (k from a tail lands on its own session's head).
 local function move_selection(dir)
-	local heads = state.head_lines
-	if #heads == 0 then
+	local stops = state.stop_lines
+	if #stops == 0 then
 		return
 	end
 	local sign = dir > 0 and 1 or -1
 	local cur = vim.api.nvim_win_get_cursor(0)[1]
 	local idx = 0
-	for i, h in ipairs(heads) do
-		if h <= cur then
+	for i, l in ipairs(stops) do
+		if l <= cur then
 			idx = i
 		end
 	end
-	-- One step first (with the tail-line rule for k), then
-	-- any extra count steps in the same direction.
 	local target
 	if sign > 0 then
-		target = math.min(idx + 1, #heads)
+		target = idx + 1
 	else
-		if idx > 0 and heads[idx] == cur then
-			target = math.max(idx - 1, 1)
+		if idx > 0 and stops[idx] == cur then
+			target = idx - 1
 		else
-			target = math.max(idx, 1)
+			target = idx
 		end
 	end
 	target = target + sign * (math.abs(dir) - 1)
-	target = math.max(1, math.min(target, #heads))
-	vim.api.nvim_win_set_cursor(0, { heads[target], 0 })
+	target = math.max(1, math.min(target, #stops))
+	vim.api.nvim_win_set_cursor(0, { stops[target], 0 })
 	preview()
+end
+
+-- The group the board cursor is in: the group of the
+-- cursor line or of the nearest line above it.
+local function group_at_cursor()
+	local line = vim.api.nvim_win_get_cursor(0)[1]
+	for l = line, 1, -1 do
+		local g = state.line_group[l]
+		if g then
+			return g
+		end
+	end
+	return nil
 end
 
 -- The main window follows the selection: moving in the board
@@ -657,25 +827,8 @@ local function host_window()
 	return board_win()
 end
 
--- The directory a spawn or the resume picker works in:
--- the chosen worktree while one is set, else Neovim's cwd.
--- A chosen directory that has vanished clears itself with
--- a warning instead of spawning in the wrong place.
-local function effective_dir()
-	local dir = state.spawn_dir
-	if dir then
-		if vim.fn.isdirectory(dir) == 1 then
-			return dir
-		end
-		state.spawn_dir = nil
-		vim.notify('agent_board: spawn directory gone, reset: '
-			.. dir, vim.log.levels.WARN)
-	end
-	return vim.fn.getcwd()
-end
-
-local function spawn(agent, command, ref, spawn_cwd)
-	local cwd = spawn_cwd or effective_dir()
+local function spawn(agent, command, ref, spawn_cwd, group_path)
+	local cwd = spawn_cwd or vim.fn.getcwd()
 	if vim.fn.isdirectory(cwd) == 0 then
 		vim.notify('agent_board: no such directory: ' .. cwd,
 			vim.log.levels.WARN)
@@ -695,6 +848,9 @@ local function spawn(agent, command, ref, spawn_cwd)
 		vim.fn.termopen(vim.o.shell, { cwd = cwd })
 	end)
 	vim.b[buf].agent_board_label = agent.label
+	if group_path then
+		vim.b[buf].agent_board_group = group_path
+	end
 	if ref then
 		vim.b[buf].agent_board_ref = ref
 	end
@@ -754,6 +910,54 @@ local function parse_sessions(lines)
 		end
 	end
 	return found
+end
+
+-- Spawn from the board: into the group under the cursor.
+-- On the new-worktree row, gemini presets ask for a name
+-- and spawn gemini -w <name> at the repo root instead.
+local function spawn_new_worktree(agent)
+	local wt = worktrees_for(vim.fn.getcwd())
+	if not wt then
+		vim.notify('agent_board: not a git repository',
+			vim.log.levels.WARN)
+		return
+	end
+	vim.ui.input({ prompt = 'New worktree name: ' }, function(name)
+		if not name then
+			return
+		end
+		name = vim.trim(name)
+		if name == '' or name == '.' or name == '..'
+			or name:sub(1, 1) == '-'
+			or not name:match('^[%w%-%.]+$') then
+			vim.notify('agent_board: invalid worktree name: '
+				.. name, vim.log.levels.WARN)
+			return
+		end
+		local gpath = wt.root .. '/.gemini/worktrees/' .. name
+		if vim.fn.isdirectory(gpath) == 1 then
+			vim.notify('agent_board: worktree exists: ' .. name,
+				vim.log.levels.WARN)
+			return
+		end
+		spawn(agent, 'gemini -w ' .. name, name, wt.root, gpath)
+	end)
+end
+
+local function spawn_at_cursor(agent)
+	local cur = vim.api.nvim_win_get_cursor(0)[1]
+	if state.new_row_line and cur == state.new_row_line then
+		if agent.command == 'gemini' then
+			spawn_new_worktree(agent)
+		else
+			vim.notify(
+				'agent_board: the new-worktree row starts gemini',
+				vim.log.levels.WARN)
+		end
+		return
+	end
+	local g = group_at_cursor()
+	spawn(agent, nil, nil, g and g.path or nil)
 end
 
 local function resume_with(ref, display_ref, cwd)
@@ -988,10 +1192,8 @@ local function spawn_resume()
 	if state.picker then
 		close_picker()
 	end
-	if state.wt_picker then
-		close_wt_picker()
-	end
-	local cwd = effective_dir()
+	local g = group_at_cursor()
+	local cwd = g and g.path or vim.fn.getcwd()
 	state.resume_seq = state.resume_seq + 1
 	local win = find_main_window(nil)
 	local created_win = false
@@ -1078,135 +1280,6 @@ local function spawn_resume()
 	end
 end
 
--- The worktree picker (W): choose the directory the spawn
--- keys and the resume picker work in, from the current
--- repo's git worktrees. The first row resets to following
--- Neovim's cwd. Synchronous: git worktree list is fast.
-local function list_worktrees(dir)
-	local out = vim.fn.systemlist(
-		{ 'git', '-C', dir, 'worktree', 'list', '--porcelain' })
-	if vim.v.shell_error ~= 0 then
-		return nil
-	end
-	local trees, cur = {}, nil
-	for _, line in ipairs(out) do
-		local path = line:match('^worktree (.+)$')
-		if path then
-			cur = { path = path, branch = '' }
-			table.insert(trees, cur)
-		elseif cur then
-			local branch = line:match('^branch refs/heads/(.+)$')
-			if branch then
-				cur.branch = branch
-			elseif line == 'detached' then
-				cur.branch = '(detached)'
-			end
-		end
-	end
-	return trees
-end
-
-local function release_wt_window(w)
-	if not vim.api.nvim_win_is_valid(w.win) then
-		return
-	end
-	if w.created_win then
-		pcall(vim.api.nvim_win_close, w.win, true)
-	elseif vim.api.nvim_buf_is_valid(w.prev_buf) then
-		pcall(vim.api.nvim_win_set_buf, w.win, w.prev_buf)
-	end
-end
-
-close_wt_picker = function()
-	local w = state.wt_picker
-	if not w then
-		return
-	end
-	state.wt_picker = nil
-	release_wt_window(w)
-	if vim.api.nvim_buf_is_valid(w.buf) then
-		pcall(vim.api.nvim_buf_delete, w.buf, { force = true })
-	end
-	local bw = board_win()
-	if bw then
-		vim.api.nvim_set_current_win(bw)
-	end
-end
-
-local function open_wt_picker()
-	if state.wt_picker then
-		close_wt_picker()
-		return
-	end
-	if state.picker then
-		close_picker()
-	end
-	local dir = effective_dir()
-	local trees = list_worktrees(dir)
-	if not trees then
-		vim.notify('agent_board: not a git repository: ' .. dir,
-			vim.log.levels.WARN)
-		return
-	end
-	local win = find_main_window(nil)
-	local created_win = false
-	if not win then
-		win = main_window(nil)
-		created_win = true
-	end
-	local buf = vim.api.nvim_create_buf(false, true)
-	local w = {
-		buf = buf,
-		win = win,
-		prev_buf = vim.api.nvim_win_get_buf(win),
-		created_win = created_win,
-		rows = {},
-	}
-	state.wt_picker = w
-	vim.bo[buf].filetype = WT_FT
-	vim.bo[buf].buftype = 'nofile'
-	vim.bo[buf].bufhidden = 'wipe'
-	vim.bo[buf].swapfile = false
-
-	local lines = { 'Spawn directory  <CR>:select q:close' }
-	local follow = '[Neovim cwd] follow the current directory'
-	if not state.spawn_dir then
-		follow = follow .. '  (current)'
-	end
-	table.insert(lines, follow)
-	w.rows[#lines] = { path = nil }
-	for _, t in ipairs(trees) do
-		local label = vim.fn.fnamemodify(t.path, ':~')
-			.. (t.branch ~= '' and ('  [' .. t.branch .. ']') or '')
-		if state.spawn_dir == t.path then
-			label = label .. '  (current)'
-		end
-		table.insert(lines, label)
-		w.rows[#lines] = { path = t.path }
-	end
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-	vim.bo[buf].modifiable = false
-
-	local opt = { noremap = true, silent = true, buffer = buf }
-	vim.keymap.set('n', '<CR>', function()
-		local row = w.rows[vim.api.nvim_win_get_cursor(0)[1]]
-		if not row then
-			return
-		end
-		state.spawn_dir = row.path
-		close_wt_picker()
-		render()
-	end, opt)
-	vim.keymap.set('n', 'q', close_wt_picker, opt)
-	vim.keymap.set('n', '<Esc>', close_wt_picker, opt)
-	vim.api.nvim_win_set_buf(win, buf)
-	vim.api.nvim_set_current_win(win)
-	vim.wo[win].number = false
-	vim.wo[win].signcolumn = 'no'
-	vim.wo[win].cursorline = true
-	vim.api.nvim_win_set_cursor(win, { 2, 0 })
-end
-
 local function open()
 	state.prev_win = vim.api.nvim_get_current_win()
 	if not state.board_buf or not vim.api.nvim_buf_is_valid(state.board_buf) then
@@ -1231,10 +1304,10 @@ local function open()
 			callback = preview,
 		})
 		for _, agent in ipairs(AGENTS) do
-			vim.keymap.set('n', agent.key, function() spawn(agent) end, opt)
+			vim.keymap.set('n', agent.key,
+				function() spawn_at_cursor(agent) end, opt)
 		end
 		vim.keymap.set('n', 'A', spawn_resume, opt)
-		vim.keymap.set('n', 'W', open_wt_picker, opt)
 	end
 	vim.cmd('topleft vertical split')
 	vim.api.nvim_win_set_buf(0, state.board_buf)
@@ -1272,11 +1345,6 @@ function M.setup()
 			if ev.buf == state.board_buf then
 				close_strip()
 			end
-			if state.wt_picker and ev.buf == state.wt_picker.buf then
-				local w = state.wt_picker
-				state.wt_picker = nil
-				release_wt_window(w)
-			end
 			if state.picker and ev.buf == state.picker.buf then
 				local p = state.picker
 				state.picker = nil
@@ -1309,11 +1377,11 @@ end
 M._strip_win = function()
 	return state.strip_win
 end
-M._spawn_dir = function()
-	return state.spawn_dir
+M._groups = function()
+	return state.groups
 end
-M._wt_picker = function()
-	return state.wt_picker
+M._refresh_worktrees = function()
+	state.wt_cache = nil
 end
 M._sync_strip = sync_strip
 
