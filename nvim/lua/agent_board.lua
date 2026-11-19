@@ -344,6 +344,19 @@ local function render()
 		local g = group_for(sess.dir or cwd_group)
 		table.insert(g.sessions, sess)
 	end
+	-- Within a group: agents first, then reviewers, then
+	-- shells; creation order (bufnr) inside each kind.
+	local KIND_RANK = { gemini = 1, reviewer = 2, shell = 3 }
+	for _, g in ipairs(groups) do
+		table.sort(g.sessions, function(x, y)
+			local rx = KIND_RANK[x.label] or 4
+			local ry = KIND_RANK[y.label] or 4
+			if rx ~= ry then
+				return rx < ry
+			end
+			return x.bufnr < y.bufnr
+		end)
+	end
 
 	local line_map = {}
 	local head_lines = {}
