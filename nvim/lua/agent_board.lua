@@ -31,7 +31,8 @@
 -- strip under the main window, with the destination session
 -- in its winbar; e moves focus there. Compose keys:
 -- <CR> send the current line, S send the whole buffer as one
--- bracketed paste and clear it, q back to the board.
+-- bracketed paste and clear it, q or <C-q> back to the board
+-- (<C-q> also from insert mode).
 
 local M = {}
 
@@ -483,11 +484,17 @@ local function compose_for(term_buf)
 	local opt = { noremap = true, silent = true, buffer = c }
 	vim.keymap.set('n', '<CR>', function() send_line(c) end, opt)
 	vim.keymap.set('n', 'S', function() send_all(c) end, opt)
-	vim.keymap.set('n', 'q', function()
+	local function leave()
 		local bw = board_win()
 		if bw then
 			vim.api.nvim_set_current_win(bw)
 		end
+	end
+	vim.keymap.set('n', 'q', leave, opt)
+	vim.keymap.set('n', '<C-q>', leave, opt)
+	vim.keymap.set('i', '<C-q>', function()
+		vim.cmd('stopinsert')
+		leave()
 	end, opt)
 	return c
 end
